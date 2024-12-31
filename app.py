@@ -1,0 +1,1 @@
+import streamlit as stfrom streamlit_server_state import server_statefrom helper.user_management import check_password, setup_local_files# page setup and loginst.set_page_config(    page_title="NLP Pipeline",    page_icon="https://www.svgrepo.com/show/398374/speaking-head.svg",)if not check_password():    st.stop()    st.header("success")

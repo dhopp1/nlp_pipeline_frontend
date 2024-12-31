@@ -1,2 +1,5 @@
+fastexcel
 nlp_pipeline
 pandas
+streamlit
+streamlit-server-state
