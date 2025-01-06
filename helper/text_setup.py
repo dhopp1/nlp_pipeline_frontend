@@ -77,12 +77,14 @@ def process_corpus(user_name, corpus_name, uploaded_document):
             processor.sync_local_metadata()
 
         # uploaded a single .docx, .pdf, or .txt
-        elif uploaded_document.name.split(".")[-1] in [
+        elif uploaded_document.name.split(".")[-1].lower() in [
             "csv",
             "pdf",
             "docx",
             "doc",
             "txt",
+            "mp3",
+            "mp4",
         ]:
             # write metadata out
             processor = nlp_processor(
