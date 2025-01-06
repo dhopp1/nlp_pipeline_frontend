@@ -22,14 +22,15 @@ def process_corpus(user_name, corpus_name, uploaded_document):
         os.makedirs(f"{temp_directory}")
 
     try:
+        # copy the file
+        with open(
+            f"{temp_directory}tmp.{uploaded_document.name.split('.')[-1]}", "wb"
+        ) as new_file:
+            new_file.write(uploaded_document.getbuffer())
+            new_file.close()
+
         # only uploaded a metadata CSV
         if uploaded_document.name == "metadata.csv":
-            with open(
-                f"{temp_directory}tmp.{uploaded_document.name.split('.')[-1]}", "wb"
-            ) as new_file:
-                new_file.write(uploaded_document.getbuffer())
-                new_file.close()
-
             metadata = pd.read_csv(f"{temp_directory}tmp.csv")
             if "text_id" not in list(metadata.columns):
                 metadata["text_id"] = list(range(1, len(metadata) + 1))

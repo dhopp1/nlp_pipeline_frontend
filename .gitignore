@@ -1,2 +1,3 @@
 *.DS_Store
 corpora/*
+helper/__pycache__/*
