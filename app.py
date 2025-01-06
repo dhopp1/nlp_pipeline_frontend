@@ -10,6 +10,7 @@ from helper.ui import (
     ui_tab,
 )
 from helper.user_management import check_password, set_user_id
+from helper.text_transformation import inputs
 
 ### page setup and authentication
 ui_tab()  # icon and page title
@@ -27,11 +28,23 @@ import_styles()
 
 ### sidebar
 ui_metadata_upload()
-
-st.sidebar.divider()
-
 engage_process_corpus()  # convert to text
 
 
 # corpus name
 ui_load_corpus()
+
+
+### tabs
+tabs = st.tabs(["Inputs", "Outputs", "README"])
+
+with tabs[0]:
+    inputs()
+
+with tabs[2]:
+    st.markdown(
+        """
+### placeholder
+text
+"""
+    )
