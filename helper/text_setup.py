@@ -179,6 +179,15 @@ def process_corpus(user_name, corpus_name, uploaded_document):
                     lambda x: x.filename == file, "local_raw_filepath"
                 ] = os.path.abspath(f"{temp_directory}raw_files/{file}")
 
+            # download any files where only a url is provided
+            download_ids = list(
+                processor.metadata.loc[
+                    lambda x: ~pd.isna(x.web_filepath), "text_id"
+                ].values
+            )
+            if len(download_ids) > 0:
+                processor.download_text_id(download_ids)
+
             # select out PDF pages if available
             if "page_numbers" in processor.metadata.columns:
                 try:
@@ -281,3 +290,5 @@ def engage_process_corpus():
             sys.stdout = old_stdout
         except:
             pass
+
+        st.info("Corpus successfully processed!")
