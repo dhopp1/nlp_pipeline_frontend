@@ -3,6 +3,17 @@ import os
 import pandas as pd
 import streamlit as st
 from streamlit_server_state import server_state, server_state_lock, no_rerun
+import zipfile
+
+
+def create_zip_file(files, zip_path):
+    "zip files together"
+    zip_path = zip_path
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for file in files:
+            zipf.write(
+                file, os.path.relpath(file, "/".join(file.split("/")[:-1]) + "/")
+            )
 
 
 def inputs():
@@ -39,6 +50,14 @@ def inputs():
                 new_file.close()
 
             st.info("Prepunctuation CSV successfully uploaded!")
+
+        # show status of upload
+        if os.path.exists(
+            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/prepunctuation_list.csv"
+        ):
+            st.info("Prepunctuation CSV uploaded")
+        else:
+            st.error("Prepunctuation CSV not uploaded")
 
         # download the file
         if os.path.exists(

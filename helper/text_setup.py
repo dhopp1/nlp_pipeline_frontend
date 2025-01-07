@@ -9,6 +9,7 @@ from zipfile import ZipFile
 import streamlit as st
 from streamlit_server_state import server_state
 
+from helper.text_transformation import create_zip_file
 from helper.user_management import update_server_state
 from helper.progress_bar import Logger
 
@@ -182,13 +183,14 @@ def process_corpus(user_name, corpus_name, uploaded_document):
                 ] = os.path.abspath(f"{temp_directory}raw_files/{file}")
 
             # download any files where only a url is provided
-            download_ids = list(
-                processor.metadata.loc[
-                    lambda x: ~pd.isna(x.web_filepath), "text_id"
-                ].values
-            )
-            if len(download_ids) > 0:
-                processor.download_text_id(download_ids)
+            if "web_filepath" in processor.metadata.columns:
+                download_ids = list(
+                    processor.metadata.loc[
+                        lambda x: ~pd.isna(x.web_filepath), "text_id"
+                    ].values
+                )
+                if len(download_ids) > 0:
+                    processor.download_text_id(download_ids)
 
             # select out PDF pages if available
             if "page_numbers" in processor.metadata.columns:
@@ -292,5 +294,39 @@ def engage_process_corpus():
             sys.stdout = old_stdout
         except:
             pass
+
+        # create the zip file
+        text_ids = list(
+            pd.read_csv(
+                f"corpora/metadata_{st.session_state['user_id']}_{st.session_state['new_corpus_name']}.csv"
+            )
+            .loc[:, "text_id"]
+            .values
+        )
+
+        # write a metadata without file_path
+        metadata = pd.read_csv(
+            f"corpora/metadata_{st.session_state['user_id']}_{st.session_state['new_corpus_name']}.csv"
+        ).drop(["file_path"], axis=1)
+        metadata = metadata[
+            ["text_id"] + [col for col in metadata.columns if col != "text_id"]
+        ]
+        metadata.to_csv(
+            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata.csv",
+            index=False,
+        )
+        files = [
+            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/"
+            + str(x)
+            + ".txt"
+            for x in text_ids
+        ] + [
+            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata.csv"
+        ]
+
+        create_zip_file(
+            files,
+            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/raw_text.zip",
+        )
 
         st.info("Corpus successfully processed!")

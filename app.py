@@ -4,6 +4,7 @@ from streamlit_server_state import server_state
 from helper.text_setup import engage_process_corpus
 from helper.ui import (
     import_styles,
+    ui_download_txt_zip,
     ui_header,
     ui_load_corpus,
     ui_metadata_upload,
@@ -33,6 +34,9 @@ engage_process_corpus()  # convert to text
 
 # corpus name
 ui_load_corpus()
+
+# download raw text file button
+ui_download_txt_zip()
 
 
 ### tabs

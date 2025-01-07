@@ -1,6 +1,9 @@
+import os
 import pandas as pd
 from streamlit_server_state import server_state, no_rerun
 import streamlit as st
+
+from helper.text_transformation import create_zip_file
 
 
 def ui_tab():
@@ -85,3 +88,21 @@ def ui_load_corpus():
         index=0,
         help="Which corpus already converted to text to work with",
     )
+
+
+def ui_download_txt_zip():
+    "download text files and metadata in a zip file"
+    if os.path.exists(
+        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/raw_text.zip"
+    ):
+        with open(
+            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/raw_text.zip",
+            "rb",
+        ) as file:
+            st.sidebar.download_button(
+                "Download documents converted to text",
+                file,
+                "raw_text.zip",
+                "application/zip",
+                help="Download raw converted text files for verification.",
+            )
