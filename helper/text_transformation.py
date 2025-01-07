@@ -89,10 +89,12 @@ def csv_expander(
 
 
 def inputs():
+    st.markdown("### Text transformation parameters")
+
     # prepunctuation
     csv_expander(
         expander_label="Replace prepunctuation",
-        info="Use this list to replace words with punctuation in them, like `COVID-19` > `covid`. Punctuation can be replaced with spaces in subsequent steps, rendering 'COVID 19' no longer as one word. The CSV should have two columns, `term` and `replacement`.",
+        info="Use this list to replace words with punctuation in them, like `COVID-19` > `covid`. Punctuation can be replaced with spaces in subsequent steps, rendering 'COVID 19' no longer as one word. The CSV should have two columns, `term` and `replacement`. If you select `Perform lowercase` in the checkbox iunder `Other text transformation options` below, you can limit the terms to lowercase terms only.",
         session_state_file_name="prepunctuation_uploaded_file",
         uploader_help="Upload your csv list of terms to replace prepunctuation. It should have two columns: `term` and `replacement`",
         uploader_button_name="prepunctuation_button",
@@ -109,7 +111,7 @@ def inputs():
     # postpunctuation
     csv_expander(
         expander_label="Replace postpunctuation",
-        info="Use this list to replace words, like `United Nations` > `un`. The CSV should have two columns, `term` and `replacement`.",
+        info="Use this list to replace words, like `United Nations` > `un`. The CSV should have two columns, `term` and `replacement`. If you select `Perform lowercase` in the checkbox under `Other text transformation options` below, you can limit the terms to lowercase terms only.",
         session_state_file_name="postpunctuation_uploaded_file",
         uploader_help="Upload your csv list of terms to replace postpunctuation. It should have two columns: `term` and `replacement`",
         uploader_button_name="postpunctuation_button",
@@ -126,7 +128,7 @@ def inputs():
     # exclude words
     csv_expander(
         expander_label="Exclude terms",
-        info="Use this list to exclude common terms from things like word count, like `good morning`, etc. The CSV should have one column, `term`.",
+        info="Use this list to exclude common terms from things like word count, like `good morning`, etc. The CSV should have one column, `term`. If you select `Perform lowercase` in the checkbox under `Other text transformation options` below, you can limit the terms to lowercase terms only.",
         session_state_file_name="exclude_uploaded_file",
         uploader_help="Upload your csv list of terms to replace exclude. It should have one column: `term`",
         uploader_button_name="exclude_button",
@@ -139,3 +141,60 @@ def inputs():
         download_button_name="Download exclude list",
         download_button_info="Download exclude list for verification.",
     )
+
+    # other text conversion options
+    with st.expander(label="Other text transformation options"):
+        # lower case
+        st.session_state["perform_lower"] = st.checkbox(
+            "Perform lowercase",
+            help="Whether or not to convert the texts into all lowercase.",
+        )
+
+        # replace accented and unusual
+        st.session_state["perform_accented"] = st.checkbox(
+            "Replace accented and unusual characters",
+            help="Whether or not to replace accented and unusual characters with non-accented equivalents.",
+        )
+
+        # remove urls
+        st.session_state["remove_urls"] = st.checkbox(
+            "Remove URLs", help="Whether or not to remove URLs from the text."
+        )
+
+        # remove headers and footers
+        st.session_state["remove_headers"] = st.checkbox(
+            "Remove headers and footers",
+            help="Whether or not to remove headers/footers that may be repeated throughout a text.",
+        )
+
+        # replace periods
+        st.session_state["replace_periods"] = st.checkbox(
+            "Replace periods",
+            help="Whether or not to replace periods (.) with |s for consistent word delimiters.",
+        )
+
+        # drop numbers
+        st.session_state["remove_numbers"] = st.checkbox(
+            "Remove numbers",
+            help="Whether or not to remove any numerals (0-9) in the text.",
+        )
+
+        # remove punctuation
+        st.session_state["remove_punctuation"] = st.checkbox(
+            "Remove punctuation",
+            help="Whether or not to replace any punctuation with spaces.",
+        )
+
+        # remove stopwords
+        st.session_state["remove_stopwords"] = st.checkbox(
+            "Remove stopwords",
+            help="Whether or not to remove stopwords (common words like 'and', 'but', etc.).",
+        )
+
+        # pervform stemming
+        st.session_state["perform_stemming"] = st.checkbox(
+            "Perform stemming",
+            help="Whether or not to stem the text. That is replacing words with their roots, e.g., 'running', 'runs', 'ran' are all converted to 'run'.",
+        )
+
+    st.markdown("### Search term parameters")
