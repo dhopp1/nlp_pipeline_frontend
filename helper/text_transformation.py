@@ -1,5 +1,6 @@
 from io import StringIO
 import os
+from nlp_pipeline.nlp_pipeline import nlp_processor
 import pandas as pd
 import streamlit as st
 from streamlit_server_state import server_state, server_state_lock, no_rerun
@@ -88,7 +89,7 @@ def csv_expander(
             )
 
 
-def inputs():
+def text_transformation_inputs():
     st.markdown("### Text transformation parameters")
 
     # prepunctuation
@@ -196,5 +197,127 @@ def inputs():
             "Perform stemming",
             help="Whether or not to stem the text. That is replacing words with their roots, e.g., 'running', 'runs', 'ran' are all converted to 'run'.",
         )
+
+    # run transformation button
+    st.session_state["text_transform_button"] = st.button(
+        "Transform text",
+        help="Run the stipulated text transformations",
+    )
+
+    if st.session_state["text_transform_button"]:
+        with st.spinner("Transforming text..."):
+            if "metadata" not in st.session_state:
+                st.session_state["metadata"] = pd.read_csv(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.csv"
+                )
+
+            # clear out existing transformed text
+            for file in os.listdir(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformed_txt_files/"
+            ):
+                os.remove(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformed_txt_files/{file}"
+                )
+
+            metadata_addt_column_names = [
+                x
+                for x in st.session_state["metadata"].columns
+                if x
+                not in [
+                    "text_id",
+                    "local_raw_filepath",
+                    "local_txt_filepath",
+                    "detected_language",
+                ]
+            ]
+            processor = nlp_processor(
+                data_path=f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/",
+                metadata_addt_column_names=metadata_addt_column_names,
+                windows_tesseract_path=None,
+                windows_poppler_path=None,
+            )
+            processor.refresh_object_metadata()
+            processor.sync_local_metadata()
+            processor.transform_text(
+                text_ids=list(processor.metadata.text_id.values),
+                path_prefix="transformed",
+                perform_lower=st.session_state["perform_lower"],
+                replace_accented_and_unusual_characters=st.session_state[
+                    "perform_accented"
+                ],
+                perform_remove_urls=st.session_state["remove_urls"],
+                perform_remove_multiple_header_and_footers=st.session_state[
+                    "remove_headers"
+                ],
+                perform_replace_period=st.session_state["replace_periods"],
+                drop_numbers=st.session_state["remove_numbers"],
+                replace_words_with_punctuation_df=(
+                    pd.read_csv(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/prepunctuation_list.csv"
+                    )
+                    if os.path.exists(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/prepunctuation_list.csv"
+                    )
+                    else None
+                ),
+                perform_remove_punctuation=st.session_state["remove_punctuation"],
+                replace_words_df=(
+                    pd.read_csv(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/postpunctuation_list.csv"
+                    )
+                    if os.path.exists(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/postpunctuation_list.csv"
+                    )
+                    else None
+                ),
+                exclude_words_df=(
+                    pd.read_csv(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_list.csv"
+                    )
+                    if os.path.exists(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_list.csv"
+                    )
+                    else None
+                ),
+                perform_remove_stopwords=st.session_state["remove_stopwords"],
+                perform_stemming=st.session_state["perform_stemming"],
+                stemmer="snowball",
+            )
+
+            # create zip file
+            files = [
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformed_txt_files/transformed_"
+                + str(x)
+                + ".txt"
+                for x in list(processor.metadata.text_id.values)
+            ] + [
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata_clean.csv"
+            ]
+
+            create_zip_file(
+                files,
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformed_text.zip",
+            )
+
+            st.info("Text successfully transformed!")
+
+    # download transformed text file
+    if os.path.exists(
+        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformed_text.zip"
+    ):
+        st.info(
+            "The text has previously been transformed. Click the `Transform text` button above to override that output with a new transformation."
+        )
+        with open(
+            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformed_text.zip",
+            "rb",
+        ) as file:
+            st.download_button(
+                "Download transformed text documents",
+                file,
+                "transformed_text.zip",
+                "application/zip",
+                help="Download transformed text files for verification.",
+            )
 
     st.markdown("### Search term parameters")

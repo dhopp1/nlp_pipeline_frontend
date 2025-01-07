@@ -13,7 +13,7 @@ from helper.ui import (
     ui_tab,
 )
 from helper.user_management import check_password, set_user_id
-from helper.text_transformation import inputs
+from helper.text_transformation import text_transformation_inputs
 
 ### page setup and authentication
 ui_tab()  # icon and page title
@@ -74,7 +74,7 @@ with tabs[0]:
         )
 
 with tabs[1]:
-    inputs()
+    text_transformation_inputs()
 
 with tabs[3]:
     st.markdown(
