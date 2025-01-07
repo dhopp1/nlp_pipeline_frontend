@@ -85,7 +85,13 @@ def ui_load_corpus():
     st.session_state["selected_corpus"] = st.sidebar.selectbox(
         "Corpus name",
         options=["None"] + st.session_state["corpora_options"],
-        index=0,
+        index=(
+            0
+            if not st.session_state["process_corpus_button"]
+            else (["None"] + st.session_state["corpora_options"]).index(
+                st.session_state["new_corpus_name"]
+            )
+        ),
         help="Which corpus already converted to text to work with",
     )
 
