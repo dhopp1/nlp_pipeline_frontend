@@ -1,3 +1,5 @@
+import os
+import pandas as pd
 import streamlit as st
 from streamlit_server_state import server_state
 
@@ -40,12 +42,41 @@ ui_download_txt_zip()
 
 
 ### tabs
-tabs = st.tabs(["Inputs", "Outputs", "README"])
+tabs = st.tabs(["Corpus metadata", "Inputs", "Outputs", "README"])
 
 with tabs[0]:
+    if os.path.exists(
+        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.csv"
+    ):
+        st.download_button(
+            "Download metadata",
+            pd.read_csv(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.csv",
+                encoding="latin1",
+            )
+            .to_csv(index=False)
+            .encode("latin1"),
+            "metadata.csv",
+            "text/csv",
+            help="Download metadata file.",
+        )
+
+        st.dataframe(
+            pd.read_csv(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.csv"
+            ),
+            hide_index=True,
+            height=800,
+        )
+    else:
+        st.error(
+            "Upload your metadata file or corpus under the `Options` dropdown on the sidebar, then hit `Convert to text`. If you have already processed a corpus, select its name under the `Corpus name` dropdown on the sidebar."
+        )
+
+with tabs[1]:
     inputs()
 
-with tabs[2]:
+with tabs[3]:
     st.markdown(
         """
 ### placeholder
