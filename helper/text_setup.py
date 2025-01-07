@@ -295,19 +295,15 @@ def engage_process_corpus():
         except:
             pass
 
-        # create the zip file
-        text_ids = list(
-            pd.read_csv(
-                f"corpora/metadata_{st.session_state['user_id']}_{st.session_state['new_corpus_name']}.csv"
-            )
-            .loc[:, "text_id"]
-            .values
+        st.session_state["metadata"] = pd.read_csv(
+            f"corpora/metadata_{st.session_state['user_id']}_{st.session_state['new_corpus_name']}.csv"
         )
 
+        # create the zip file
+        text_ids = list(st.session_state["metadata"].loc[:, "text_id"].values)
+
         # write a metadata without file_path
-        metadata = pd.read_csv(
-            f"corpora/metadata_{st.session_state['user_id']}_{st.session_state['new_corpus_name']}.csv"
-        ).drop(["file_path"], axis=1)
+        metadata = st.session_state["metadata"].drop(["file_path"], axis=1)
         metadata = metadata[
             ["text_id"] + [col for col in metadata.columns if col != "text_id"]
         ]
