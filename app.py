@@ -63,7 +63,7 @@ with tabs[0]:
 
         st.dataframe(
             pd.read_csv(
-                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.csv"
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata_clean.csv"
             ),
             hide_index=True,
             height=800,

@@ -1,3 +1,4 @@
+import glob
 import os
 import types
 import shutil
@@ -222,11 +223,11 @@ def process_corpus(user_name, corpus_name, uploaded_document):
         # move the .txt files to the appropriate place for RAG
         if os.path.exists(f"corpora/{corpus_name}/"):
             shutil.rmtree(f"corpora/{corpus_name}/")
-        shutil.copytree(f"{temp_directory}txt_files/", f"corpora/{corpus_name}/")
+        shutil.copytree(f"{temp_directory}/", f"corpora/{corpus_name}/")
 
         # adding file-path for application
         processor.metadata["file_path"] = [
-            os.path.abspath(f"corpora/{corpus_name}/{x.split('/')[-1]}")
+            os.path.abspath(f"corpora/{corpus_name}/txt_files/{x.split('/')[-1]}")
             for x in processor.metadata["local_txt_filepath"]
         ]
         processor.metadata.drop(
@@ -260,6 +261,15 @@ def process_corpus(user_name, corpus_name, uploaded_document):
 
         # clear out the tmp_helper directory
         shutil.rmtree(temp_directory)
+
+        # remove other superfluous documents
+        if os.path.exists(f"corpora/{corpus_name}/__MACOSX/"):
+            shutil.rmtree(f"corpora/{corpus_name}/__MACOSX/")
+        if os.path.exists(f"corpora/{corpus_name}/corpus/"):
+            shutil.rmtree(f"corpora/{corpus_name}/corpus/")
+        for f in glob.glob(f"corpora/{corpus_name}/tmp.*"):
+            os.remove(f)
+
     except Exception as error:
         shutil.rmtree(temp_directory)
         raise ValueError(
@@ -296,28 +306,36 @@ def engage_process_corpus():
             pass
 
         st.session_state["metadata"] = pd.read_csv(
-            f"corpora/metadata_{st.session_state['user_id']}_{st.session_state['new_corpus_name']}.csv"
+            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata.csv"
         )
 
         # create the zip file
         text_ids = list(st.session_state["metadata"].loc[:, "text_id"].values)
 
         # write a metadata without file_path
-        metadata = st.session_state["metadata"].drop(["file_path"], axis=1)
+        metadata = st.session_state["metadata"].drop(
+            [
+                "local_raw_filepath",
+                "local_txt_filepath",
+                "detected_language",
+            ],
+            axis=1,
+            errors="ignore",
+        )
         metadata = metadata[
             ["text_id"] + [col for col in metadata.columns if col != "text_id"]
         ]
         metadata.to_csv(
-            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata.csv",
+            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata_clean.csv",
             index=False,
         )
         files = [
-            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/"
+            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/txt_files/"
             + str(x)
             + ".txt"
             for x in text_ids
         ] + [
-            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata.csv"
+            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata_clean.csv"
         ]
 
         create_zip_file(
