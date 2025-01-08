@@ -321,3 +321,96 @@ def text_transformation_inputs():
             )
 
     st.markdown("### Search term parameters")
+
+    # search terms
+    csv_expander(
+        expander_label="Search terms CSV",
+        info="Use this list to search for the occurences of terms in the corpus.",
+        session_state_file_name="search_terms",
+        uploader_help="Upload your csv list of search terms to look for. It can have multiple columns ending in the most specific terms to search for. E.g., columns of `grouping`>`concept`>`permutation`. Only the term in the right-most column, `permutation`, will be searched for. The other columns are for groupings and aggregations.",
+        uploader_button_name="search_terms_button",
+        uploader_button_label="Upload search terms",
+        uploader_button_help="Upload a CSV with search terms.",
+        csv_name="search_terms.csv",
+        finish_info="Search terms CSV successfully uploaded!",
+        uploaded_info="Search terms CSV uploaded",
+        uploaded_error="Search terms CSV not uploaded",
+        download_button_name="Download search terms list",
+        download_button_info="Download search terms list for verification.",
+    )
+
+    # other search term parameters
+    with st.expander(label="Search parameters"):
+        st.session_state["character_buffer"] = st.number_input(
+            "Length of character buffer",
+            min_value=3,
+            value=100,
+            help="The search will return the context of the found terms as well. This parameter is the number of characters on either side of the term occurrence. A bigger number returns a larger context.",
+        )
+
+        st.session_state["co_occurring_n_words"] = st.number_input(
+            "Co-occurring n words limit",
+            min_value=1,
+            value=50,
+            help="The search will also return the top n words that occur alongside each of the search terms.",
+        )
+
+    # run search terms button
+    if os.path.exists(
+        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/search_terms.csv"
+    ):
+        st.session_state["run_search_button"] = st.button(
+            "Execute search",
+            help="Search the corpus for terms in the uploaded search terms list.",
+        )
+
+        if st.session_state["run_search_button"]:
+            with st.spinner("Searching corpus..."):
+                if "metadata" not in st.session_state:
+                    st.session_state["metadata"] = pd.read_csv(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.csv"
+                    )
+
+                metadata_addt_column_names = [
+                    x
+                    for x in st.session_state["metadata"].columns
+                    if x
+                    not in [
+                        "text_id",
+                        "local_raw_filepath",
+                        "local_txt_filepath",
+                        "detected_language",
+                    ]
+                ]
+                processor = nlp_processor(
+                    data_path=f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/",
+                    metadata_addt_column_names=metadata_addt_column_names,
+                    windows_tesseract_path=None,
+                    windows_poppler_path=None,
+                )
+                processor.refresh_object_metadata()
+                processor.sync_local_metadata()
+
+                # search terms
+                processor.gen_search_terms(
+                    group_name="all",
+                    text_ids=list(processor.metadata.text_id.values),
+                    search_terms_df=pd.read_csv(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/search_terms.csv",
+                        encoding="latin1",
+                    ),
+                    path_prefix="transformed",
+                    character_buffer=st.session_state["character_buffer"],
+                )
+
+                # co-occurring terms
+                processor.gen_co_occurring_terms(
+                    group_name="all",
+                    co_occurrence_terms_df=pd.read_csv(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/search_terms.csv",
+                        encoding="latin1",
+                    ),
+                    n_words=st.session_state["co_occurring_n_words"],
+                )
+
+            st.info("Corpus searched successfully!")
