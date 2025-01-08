@@ -14,6 +14,7 @@ from helper.ui import (
 )
 from helper.user_management import check_password, set_user_id
 from helper.text_transformation import text_transformation_inputs
+from helper.search_terms import search_terms_inputs
 
 ### page setup and authentication
 ui_tab()  # icon and page title
@@ -42,9 +43,21 @@ ui_download_txt_zip()
 
 
 ### tabs
-tabs = st.tabs(["Corpus metadata", "Inputs", "Outputs", "README"])
+tab_names = ["README", "Corpus metadata", "Text transformation", "Search terms"]
 
-with tabs[0]:
+tabs = st.tabs(tab_names)
+
+# README
+with tabs[tab_names.index("README")]:
+    st.markdown(
+        """
+### placeholder
+text
+"""
+    )
+
+# metadata
+with tabs[tab_names.index("Corpus metadata")]:
     if os.path.exists(
         f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.csv"
     ):
@@ -73,13 +86,10 @@ with tabs[0]:
             "Upload your metadata file or corpus under the `Options` dropdown on the sidebar, then hit `Convert to text`. If you have already processed a corpus, select its name under the `Corpus name` dropdown on the sidebar."
         )
 
-with tabs[1]:
+# text transformation
+with tabs[tab_names.index("Text transformation")]:
     text_transformation_inputs()
 
-with tabs[3]:
-    st.markdown(
-        """
-### placeholder
-text
-"""
-    )
+# search terms
+with tabs[tab_names.index("Search terms")]:
+    search_terms_inputs()
