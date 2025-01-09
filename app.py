@@ -19,6 +19,7 @@ from helper.entities import gen_entities
 from helper.top_words import gen_top_words
 from helper.sentiment import gen_sentiment
 from helper.summary_statistics import gen_summary_statistics
+from helper.similarity import gen_similarity
 
 ### page setup and authentication
 ui_tab()  # icon and page title
@@ -56,6 +57,7 @@ tab_names = [
     "Top entities",
     "Sentiment",
     "Summary statistics",
+    "Text similarity",
 ]
 
 tabs = st.tabs(tab_names)
@@ -128,3 +130,7 @@ with tabs[tab_names.index("Sentiment")]:
 # summary statistics
 with tabs[tab_names.index("Summary statistics")]:
     gen_summary_statistics()
+
+# text similarity
+with tabs[tab_names.index("Text similarity")]:
+    gen_similarity()
