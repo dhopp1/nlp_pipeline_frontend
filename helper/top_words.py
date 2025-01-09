@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import plotly.express as px
 import streamlit as st
 
 from helper.text_transformation import initialize_processor
@@ -144,3 +145,36 @@ def gen_top_words():
                 "text/csv",
                 help="Download the top words.",
             )
+
+            # bar plot(s)
+            plot_df = pd.read_csv(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/top_words.csv",
+                encoding="latin1",
+            )
+            fig = px.bar(
+                plot_df,
+                x="word",
+                y="count",
+                color=plot_df.columns[0] if len(plot_df.columns) > 2 else None,
+            )
+            fig.update_layout(
+                yaxis_title="Count",
+                xaxis_title="",
+                title=f"Top {st.session_state['n_top_words']} words",
+            )
+            st.plotly_chart(fig, height=450, use_container_width=True)
+
+            if st.session_state["top_words_groups"] == "NA":
+                st.markdown("### Word cloud")
+                # wordcloud
+                p, plot_df = processor.word_cloud(
+                    text_ids=text_ids,
+                    path_prefix="transformed",
+                    n_words=st.session_state["n_top_words"],
+                )
+
+                st.pyplot(p)
+            else:
+                st.error(
+                    "A word cloud can only be viewed if `Metadata column grouping to consider in the count` is set to `NA`."
+                )

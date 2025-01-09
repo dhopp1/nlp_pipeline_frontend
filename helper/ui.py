@@ -9,6 +9,7 @@ def ui_tab():
     st.set_page_config(
         page_title="NLP Pipeline",
         page_icon="https://www.svgrepo.com/show/398374/speaking-head.svg",
+        layout="wide",
     )
 
 
