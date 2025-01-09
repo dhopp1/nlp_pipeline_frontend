@@ -56,28 +56,30 @@ def gen_top_words():
 
         if st.session_state["run_top_words_button"]:
             # generate the CSV first with all text ids regardless
-            if not (
-                os.path.exists(
+            if os.path.exists(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_list.csv"
+            ):
+                exclude_words = list(
+                    pd.read_csv(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_list.csv"
+                    )["term"]
+                )
+            else:
+                exclude_words = []
+
+            # remove an existing word count file
+            if os.path.exists(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_word_counts.csv"
+            ):
+                os.remove(
                     f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_word_counts.csv"
                 )
-            ):
-                processor.gen_word_count_csv(
-                    text_ids=list(processor.metadata.text_id.values),
-                    path_prefix="transformed",
-                    exclude_words=(
-                        list(
-                            pd.read_csv(
-                                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_list.csv"
-                            )["term"]
-                        )
-                        if os.path.exists(
-                            os.path.exists(
-                                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_list.csv"
-                            )
-                        )
-                        else []
-                    ),
-                )
+
+            processor.gen_word_count_csv(
+                text_ids=list(processor.metadata.text_id.values),
+                path_prefix="transformed",
+                exclude_words=exclude_words,
+            )
 
             # generate the CSV
             # no grouping

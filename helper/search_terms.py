@@ -1,6 +1,7 @@
 from nlp_pipeline.nlp_pipeline import nlp_processor
 import os
 import pandas as pd
+import plotly.express as px
 import streamlit as st
 
 from helper.text_transformation import csv_expander, initialize_processor
@@ -193,41 +194,85 @@ def search_terms_inputs():
             help="Get a breakdown of occurrences of a search in each document",
         )
 
-        st.session_state["search_individual_button"] = st.button(
-            "Execute individual term search",
-            help="Search the corpus for an individual search term.",
-        )
+        # dropdown of groups
+        if "metadata" in st.session_state:
+            st.session_state["individuaL_search_groups"] = st.selectbox(
+                "Metadata column grouping to group search results",
+                options=["NA"]
+                + [
+                    x
+                    for x in st.session_state["metadata"].columns
+                    if x
+                    not in [
+                        "local_raw_filepath",
+                        "local_txt_filepath",
+                        "detected_language",
+                    ]
+                ],
+                index=0,
+                help="You can alternatively select a metadata column to group the results by. Leave as `NA` to not group.",
+            )
 
-        if st.session_state["search_individual_button"]:
-            with st.spinner("Performing search..."):
-                # execute search
-                count = []
-                text_ids = []
-                for text in os.listdir(
-                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformed_txt_files/"
-                ):
-                    if ".txt" in text:
-                        with open(
-                            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformed_txt_files/{text}",
-                            "r",
-                            encoding="latin1",
-                        ) as f:
-                            stringx = f.read()
-                        text_ids.append(int(text.split("_")[1].split(".")[0]))
-                        count.append(
-                            stringx.count(
-                                " " + st.session_state["search_individual_input"] + " "
+            st.session_state["search_individual_button"] = st.button(
+                "Execute individual term search",
+                help="Search the corpus for an individual search term.",
+            )
+
+            if st.session_state["search_individual_button"]:
+                with st.spinner("Performing search..."):
+                    # execute search
+                    count = []
+                    text_ids = []
+                    for text in os.listdir(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformed_txt_files/"
+                    ):
+                        if ".txt" in text:
+                            with open(
+                                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformed_txt_files/{text}",
+                                "r",
+                                encoding="latin1",
+                            ) as f:
+                                stringx = f.read()
+                            text_ids.append(int(text.split("_")[1].split(".")[0]))
+                            count.append(
+                                stringx.count(
+                                    " "
+                                    + st.session_state["search_individual_input"]
+                                    + " "
+                                )
                             )
+
+                    output = pd.DataFrame({"text_id": text_ids, "count": count})
+                    output["search_term"] = st.session_state["search_individual_input"]
+                    output = output.loc[:, ["text_id", "search_term", "count"]]
+
+                    # group by metadata columln if specified
+                    if st.session_state["individuaL_search_groups"] != "NA":
+                        output = output.merge(
+                            st.session_state["metadata"], how="left", on="text_id"
+                        ).loc[
+                            :,
+                            [
+                                st.session_state["individuaL_search_groups"],
+                                "search_term",
+                                "count",
+                            ],
+                        ]
+                        output = (
+                            output.groupby(st.session_state["individuaL_search_groups"])
+                            .sum()
+                            .reset_index()
                         )
 
-                output = pd.DataFrame({"text_id": text_ids, "count": count})
-                output["search_term"] = st.session_state["search_individual_input"]
-                output = output.loc[:, ["text_id", "search_term", "count"]]
-                output.to_csv(
-                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/individual_search_results.csv",
-                    index=False,
-                )
-            st.info("Search completed!")
+                    output = output.sort_values(
+                        [output.columns[0]], axis=0
+                    ).reset_index(drop=True)
+
+                    output.to_csv(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/individual_search_results.csv",
+                        index=False,
+                    )
+                st.info("Search completed!")
 
         if os.path.exists(
             f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/individual_search_results.csv"
@@ -245,10 +290,19 @@ def search_terms_inputs():
                 help="Download result of individual term search.",
             )
 
-            st.dataframe(
-                data=pd.read_csv(
-                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/individual_search_results.csv",
-                    encoding="latin1",
-                ),
-                hide_index=True,
+            # bar plot
+            plot_df = pd.read_csv(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/individual_search_results.csv",
+                encoding="latin1",
             )
+            fig = px.bar(
+                plot_df,
+                x=plot_df.columns[0],
+                y="count",
+            )
+            fig.update_layout(
+                yaxis_title="Count",
+                xaxis_title="",
+                title=f"Occurence of '{plot_df.iloc[0, 1]}' in documents",
+            )
+            st.plotly_chart(fig, height=450, use_container_width=True)

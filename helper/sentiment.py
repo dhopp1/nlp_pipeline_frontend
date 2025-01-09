@@ -64,12 +64,12 @@ def gen_sentiment():
                 st.session_state["sentiment_column"]
                 == "Average sentiment without neutral sentences"
             ):
-                col_name = "avg_sentiment_w_neutral"
+                col_name = "avg_sentiment_wo_neutral"
             elif (
                 st.session_state["sentiment_column"]
                 == "Average sentiment with neutral sentences"
             ):
-                col_name = "avg_sentiment_wo_neutral"
+                col_name = "avg_sentiment_w_neutral"
             elif (
                 st.session_state["sentiment_column"]
                 == "Proportion of neutral sentences"

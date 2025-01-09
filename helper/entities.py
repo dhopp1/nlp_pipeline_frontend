@@ -56,15 +56,18 @@ def gen_entities():
 
         if st.session_state["run_top_entities_button"]:
             # generate the CSV first with all text ids regardless
-            if not (
-                os.path.exists(
+            with st.spinner("Calculating entities..."):
+                # remove an existing word count file
+                if os.path.exists(
                     f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_entity_counts.csv"
-                )
-            ):
-                with st.spinner("Calculating entities..."):
-                    processor.gen_entity_count_csv(
-                        text_ids=list(processor.metadata.text_id.values),
+                ):
+                    os.remove(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_entity_counts.csv"
                     )
+
+                processor.gen_entity_count_csv(
+                    text_ids=list(processor.metadata.text_id.values),
+                )
 
             # generate the CSV
             # no grouping
