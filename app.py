@@ -15,6 +15,7 @@ from helper.ui import (
 from helper.user_management import check_password, set_user_id
 from helper.text_transformation import text_transformation_inputs
 from helper.search_terms import search_terms_inputs
+from helper.entities import gen_entities
 from helper.top_words import gen_top_words
 
 ### page setup and authentication
@@ -50,6 +51,7 @@ tab_names = [
     "Text transformation",
     "Search terms",
     "Top words",
+    "Top entities",
 ]
 
 tabs = st.tabs(tab_names)
@@ -109,3 +111,7 @@ with tabs[tab_names.index("Search terms")]:
 # word counts
 with tabs[tab_names.index("Top words")]:
     gen_top_words()
+
+# entity counts
+with tabs[tab_names.index("Top entities")]:
+    gen_entities()
