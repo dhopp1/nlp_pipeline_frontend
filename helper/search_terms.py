@@ -180,3 +180,75 @@ def search_terms_inputs():
                         "text/csv",
                         help="Downloads a CSV with the count of words that occur in the context of previous search terms.",
                     )
+
+    # search for a specific term
+    with st.expander(label="Individual search term"):
+        st.markdown(
+            "Search through every document for occurrences of a specific search term."
+        )
+
+        st.session_state["search_individual_input"] = st.text_input(
+            "Search term",
+            value="",
+            help="Get a breakdown of occurrences of a search in each document",
+        )
+
+        st.session_state["search_individual_button"] = st.button(
+            "Execute individual term search",
+            help="Search the corpus for an individual search term.",
+        )
+
+        if st.session_state["search_individual_button"]:
+            with st.spinner("Performing search..."):
+                # execute search
+                count = []
+                text_ids = []
+                for text in os.listdir(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformed_txt_files/"
+                ):
+                    if ".txt" in text:
+                        with open(
+                            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformed_txt_files/{text}",
+                            "r",
+                            encoding="latin1",
+                        ) as f:
+                            stringx = f.read()
+                        text_ids.append(int(text.split("_")[1].split(".")[0]))
+                        count.append(
+                            stringx.count(
+                                " " + st.session_state["search_individual_input"] + " "
+                            )
+                        )
+
+                output = pd.DataFrame({"text_id": text_ids, "count": count})
+                output["search_term"] = st.session_state["search_individual_input"]
+                output = output.loc[:, ["text_id", "search_term", "count"]]
+                output.to_csv(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/individual_search_results.csv",
+                    index=False,
+                )
+            st.info("Search completed!")
+
+        if os.path.exists(
+            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/individual_search_results.csv"
+        ):
+            st.download_button(
+                "Download individual term search results",
+                pd.read_csv(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/individual_search_results.csv",
+                    encoding="latin1",
+                )
+                .to_csv(index=False)
+                .encode("latin1"),
+                "individual_search_term_results.csv",
+                "text/csv",
+                help="Download result of individual term search.",
+            )
+
+            st.dataframe(
+                data=pd.read_csv(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/individual_search_results.csv",
+                    encoding="latin1",
+                ),
+                hide_index=True,
+            )
