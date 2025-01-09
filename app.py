@@ -17,6 +17,7 @@ from helper.text_transformation import text_transformation_inputs
 from helper.search_terms import search_terms_inputs
 from helper.entities import gen_entities
 from helper.top_words import gen_top_words
+from helper.sentiment import gen_sentiment
 
 ### page setup and authentication
 ui_tab()  # icon and page title
@@ -52,6 +53,7 @@ tab_names = [
     "Search terms",
     "Top words",
     "Top entities",
+    "Sentiment",
 ]
 
 tabs = st.tabs(tab_names)
@@ -115,3 +117,8 @@ with tabs[tab_names.index("Top words")]:
 # entity counts
 with tabs[tab_names.index("Top entities")]:
     gen_entities()
+
+
+# sentiment
+with tabs[tab_names.index("Sentiment")]:
+    gen_sentiment()
