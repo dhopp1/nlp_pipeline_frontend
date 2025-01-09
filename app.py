@@ -15,6 +15,7 @@ from helper.ui import (
 from helper.user_management import check_password, set_user_id
 from helper.text_transformation import text_transformation_inputs
 from helper.search_terms import search_terms_inputs
+from helper.top_words import gen_top_words
 
 ### page setup and authentication
 ui_tab()  # icon and page title
@@ -43,7 +44,13 @@ ui_download_txt_zip()
 
 
 ### tabs
-tab_names = ["README", "Corpus metadata", "Text transformation", "Search terms"]
+tab_names = [
+    "README",
+    "Corpus metadata",
+    "Text transformation",
+    "Search terms",
+    "Top words",
+]
 
 tabs = st.tabs(tab_names)
 
@@ -61,6 +68,11 @@ with tabs[tab_names.index("Corpus metadata")]:
     if os.path.exists(
         f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.csv"
     ):
+        if "metadata" not in st.session_state:
+            st.session_state["metadata"] = pd.read_csv(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.csv"
+            )
+
         st.download_button(
             "Download metadata",
             pd.read_csv(
@@ -93,3 +105,7 @@ with tabs[tab_names.index("Text transformation")]:
 # search terms
 with tabs[tab_names.index("Search terms")]:
     search_terms_inputs()
+
+# word counts
+with tabs[tab_names.index("Top words")]:
+    gen_top_words()

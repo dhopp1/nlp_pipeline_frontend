@@ -7,6 +7,31 @@ from streamlit_server_state import server_state, server_state_lock, no_rerun
 import zipfile
 
 
+def initialize_processor():
+    "initialize the processor on the selected corpus name"
+    metadata_addt_column_names = [
+        x
+        for x in st.session_state["metadata"].columns
+        if x
+        not in [
+            "text_id",
+            "local_raw_filepath",
+            "local_txt_filepath",
+            "detected_language",
+        ]
+    ]
+    processor = nlp_processor(
+        data_path=f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/",
+        metadata_addt_column_names=metadata_addt_column_names,
+        windows_tesseract_path=None,
+        windows_poppler_path=None,
+    )
+    processor.refresh_object_metadata()
+    processor.sync_local_metadata()
+
+    return processor
+
+
 def create_zip_file(files, zip_path):
     "zip files together"
     zip_path = zip_path
@@ -209,11 +234,6 @@ def text_transformation_inputs():
 
     if st.session_state["text_transform_button"]:
         with st.spinner("Transforming text..."):
-            if "metadata" not in st.session_state:
-                st.session_state["metadata"] = pd.read_csv(
-                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.csv"
-                )
-
             # clear out existing transformed text
             for file in os.listdir(
                 f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformed_txt_files/"
@@ -222,25 +242,8 @@ def text_transformation_inputs():
                     f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformed_txt_files/{file}"
                 )
 
-            metadata_addt_column_names = [
-                x
-                for x in st.session_state["metadata"].columns
-                if x
-                not in [
-                    "text_id",
-                    "local_raw_filepath",
-                    "local_txt_filepath",
-                    "detected_language",
-                ]
-            ]
-            processor = nlp_processor(
-                data_path=f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/",
-                metadata_addt_column_names=metadata_addt_column_names,
-                windows_tesseract_path=None,
-                windows_poppler_path=None,
-            )
-            processor.refresh_object_metadata()
-            processor.sync_local_metadata()
+            processor = initialize_processor()
+
             processor.transform_text(
                 text_ids=list(processor.metadata.text_id.values),
                 path_prefix="transformed",

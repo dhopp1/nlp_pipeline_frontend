@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import streamlit as st
 
-from helper.text_transformation import csv_expander
+from helper.text_transformation import csv_expander, initialize_processor
 
 
 def search_terms_inputs():
@@ -72,30 +72,7 @@ def search_terms_inputs():
 
         if st.session_state["run_search_button"]:
             with st.spinner("Searching corpus..."):
-                if "metadata" not in st.session_state:
-                    st.session_state["metadata"] = pd.read_csv(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.csv"
-                    )
-
-                metadata_addt_column_names = [
-                    x
-                    for x in st.session_state["metadata"].columns
-                    if x
-                    not in [
-                        "text_id",
-                        "local_raw_filepath",
-                        "local_txt_filepath",
-                        "detected_language",
-                    ]
-                ]
-                processor = nlp_processor(
-                    data_path=f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/",
-                    metadata_addt_column_names=metadata_addt_column_names,
-                    windows_tesseract_path=None,
-                    windows_poppler_path=None,
-                )
-                processor.refresh_object_metadata()
-                processor.sync_local_metadata()
+                processor = initialize_processor()
 
                 # search terms
                 processor.gen_search_terms(
