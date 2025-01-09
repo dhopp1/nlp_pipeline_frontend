@@ -76,6 +76,23 @@ def gen_summary_statistics():
                 help="",
             )
 
+            # which metadata column to use for x axis labels
+            st.session_state["summary_x_label"] = st.selectbox(
+                "Metadata column to display on x axis for summary stats",
+                options=[
+                    x
+                    for x in st.session_state["metadata"].columns
+                    if x
+                    not in [
+                        "local_raw_filepath",
+                        "local_txt_filepath",
+                        "detected_language",
+                    ]
+                ],
+                index=0,
+                help="Select which metadata column you want to use for labelling the x axis.",
+            )
+
             plot_df = (
                 pd.read_csv(
                     f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_summary_stats.csv",
@@ -86,14 +103,35 @@ def gen_summary_statistics():
                 )
                 .reset_index(drop=True)
             )
+
+            # if a column other than text_id is chosen for the x-axis labels
+            if st.session_state["summary_x_label"] != "text_id":
+                plot_df = plot_df.merge(
+                    st.session_state["metadata"], how="left", on="text_id"
+                ).loc[
+                    :,
+                    [
+                        st.session_state["summary_x_label"],
+                        "n_words",
+                        "n_unique_words",
+                        "n_sentences",
+                        "n_pages",
+                        "avg_word_length",
+                        "avg_word_incidence",
+                        "num_chars_numeric",
+                        "num_chars_alpha",
+                        "numeric_proportion",
+                    ],
+                ]
+
             fig = px.bar(
                 plot_df,
-                x="text_id",
+                x=st.session_state["summary_x_label"],
                 y=st.session_state["summary_stat_column"],
             )
             fig.update_layout(
                 yaxis_title=st.session_state["summary_stat_column"],
-                xaxis_title="Text ID",
+                xaxis_title=st.session_state["summary_x_label"],
                 title=st.session_state["summary_stat_column"],
                 xaxis_type="category",
             )

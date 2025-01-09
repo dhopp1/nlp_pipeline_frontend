@@ -76,6 +76,24 @@ def gen_sentiment():
             ):
                 col_name = "neutral_proportion"
 
+            # which metadata column to use for x axis labels
+            st.session_state["sentiment_x_label"] = st.selectbox(
+                "Metadata column to display on x axis",
+                options=[
+                    x
+                    for x in st.session_state["metadata"].columns
+                    if x
+                    not in [
+                        "local_raw_filepath",
+                        "local_txt_filepath",
+                        "detected_language",
+                    ]
+                ],
+                index=0,
+                help="Select which metadata column you want to use for labelling the x axis.",
+            )
+
+            # plot data
             plot_df = (
                 pd.read_csv(
                     f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_sentiments.csv",
@@ -84,14 +102,29 @@ def gen_sentiment():
                 .sort_values([col_name], axis=0, ascending=False)
                 .reset_index(drop=True)
             )
+
+            # if a column other than text_id is chosen for the x-axis labels
+            if st.session_state["sentiment_x_label"] != "text_id":
+                plot_df = plot_df.merge(
+                    st.session_state["metadata"], how="left", on="text_id"
+                ).loc[
+                    :,
+                    [
+                        st.session_state["sentiment_x_label"],
+                        "avg_sentiment_w_neutral",
+                        "avg_sentiment_wo_neutral",
+                        "neutral_proportion",
+                    ],
+                ]
+
             fig = px.bar(
                 plot_df,
-                x="text_id",
+                x=st.session_state["sentiment_x_label"],
                 y=col_name,
             )
             fig.update_layout(
                 yaxis_title=st.session_state["sentiment_column"],
-                xaxis_title="Text ID",
+                xaxis_title=st.session_state["sentiment_x_label"],
                 title=st.session_state["sentiment_column"],
                 xaxis_type="category",
             )
