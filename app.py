@@ -108,6 +108,8 @@ Under `Search parameters`, `Length of character buffer` tells the number of char
 
 Once CSVs have been uploaded, click the `Execute search` button to perform the search. From the `Outputs` section, you can download the contexts of all the found search terms, the number of found terms, and the count of co-occurring words.
 
+In the `Individual search term` section you can perform and visualize the results of searching for a single term. Enter the term in the `Search term` field, then hit `Execute individual term search` to perform the search. You can group the results by a column in the metadata.
+
 ### Top words
 Here, you can see the top occurring words in the corpus.
 
