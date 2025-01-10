@@ -1,5 +1,7 @@
 fastexcel
 nlp_pipeline
 pandas
+pickle
+plotly
 streamlit
 streamlit-server-state
