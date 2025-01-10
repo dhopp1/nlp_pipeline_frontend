@@ -3,14 +3,18 @@ import os
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+import sys
 
 from helper.text_transformation import csv_expander, initialize_processor
+from helper.progress_bar import Logger
 
 
 def search_terms_inputs():
     "info and csv upload for search terms"
     st.markdown("### Search terms")
-    st.markdown("Use this section to search for terms within the corpus.")
+    st.markdown(
+        "Use this section to search for terms within the corpus. For the `Execute search button to work properly, the `Replace periods` and `Remove punctuation` options must have been selected and run on the `Text transformation` tab."
+    )
 
     # search terms
     csv_expander(
@@ -72,6 +76,10 @@ def search_terms_inputs():
         )
 
         if st.session_state["run_search_button"]:
+            # intialize progress bar in case necessary
+            old_stdout = sys.stdout
+            sys.stdout = Logger(st.progress(0), st.empty())
+
             with st.spinner("Searching corpus..."):
                 processor = initialize_processor()
 
@@ -110,6 +118,13 @@ def search_terms_inputs():
                     )
 
             st.info("Corpus searched successfully!")
+
+            # clear the progress bar
+            try:
+                sys.stdout = sys.stdout.clear()
+                sys.stdout = old_stdout
+            except:
+                pass
 
         # search term outputs
         if os.path.exists(

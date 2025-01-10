@@ -2,8 +2,10 @@ import os
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+import sys
 
 from helper.text_transformation import initialize_processor
+from helper.progress_bar import Logger
 
 
 # gen entity count csv
@@ -57,6 +59,10 @@ def gen_entities():
         if st.session_state["run_top_entities_button"]:
             # generate the CSV first with all text ids regardless
             with st.spinner("Calculating entities..."):
+                # intialize progress bar in case necessary
+                old_stdout = sys.stdout
+                sys.stdout = Logger(st.progress(0), st.empty())
+
                 # remove an existing word count file
                 if os.path.exists(
                     f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_entity_counts.csv"
@@ -115,6 +121,14 @@ def gen_entities():
                         df = pd.concat([df, tmp_df], ignore_index=True)
 
             st.info("Top entities successfully calculated!")
+
+            # clear the progress bar
+            try:
+                sys.stdout = sys.stdout.clear()
+                sys.stdout = old_stdout
+            except:
+                pass
+
             df.to_csv(
                 f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/top_entities.csv",
                 index=False,

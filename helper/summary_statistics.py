@@ -2,8 +2,10 @@ import os
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+import sys
 
 from helper.text_transformation import initialize_processor
+from helper.progress_bar import Logger
 
 
 # gen summary statistics csv
@@ -35,11 +37,22 @@ def gen_summary_statistics():
         if st.session_state["run_summary_button"]:
             # generate the CSV first with all text ids regardless
             with st.spinner("Generating summary statistics..."):
+                # intialize progress bar in case necessary
+                old_stdout = sys.stdout
+                sys.stdout = Logger(st.progress(0), st.empty())
+
                 processor.gen_summary_stats_csv(
                     text_ids=list(processor.metadata.text_id.values),
                     path_prefix="transformed",
                 )
             st.info("Summary statistics successfully calculated!")
+
+            # clear the progress bar
+            try:
+                sys.stdout = sys.stdout.clear()
+                sys.stdout = old_stdout
+            except:
+                pass
 
         if os.path.exists(
             f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_summary_stats.csv"

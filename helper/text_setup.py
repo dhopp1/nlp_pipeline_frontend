@@ -298,13 +298,6 @@ def engage_process_corpus():
                 st.session_state["new_corpus_name"],
             )
 
-        # clear the progress bar
-        try:
-            sys.stdout = sys.stdout.clear()
-            sys.stdout = old_stdout
-        except:
-            pass
-
         st.session_state["metadata"] = pd.read_csv(
             f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata.csv"
         )
@@ -344,3 +337,10 @@ def engage_process_corpus():
         )
 
         st.info("Corpus successfully processed!")
+
+        # clear the progress bar
+        try:
+            sys.stdout = sys.stdout.clear()
+            sys.stdout = old_stdout
+        except:
+            pass

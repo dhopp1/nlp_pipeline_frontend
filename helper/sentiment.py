@@ -2,8 +2,10 @@ import os
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+import sys
 
 from helper.text_transformation import initialize_processor
+from helper.progress_bar import Logger
 
 
 # gen sentiment csv
@@ -25,11 +27,22 @@ def gen_sentiment():
         if st.session_state["run_sentiment_button"]:
             # generate the CSV first with all text ids regardless
             with st.spinner("Generating sentiment scores..."):
+                # intialize progress bar in case necessary
+                old_stdout = sys.stdout
+                sys.stdout = Logger(st.progress(0), st.empty())
+
                 processor.gen_sentiment_csv(
                     text_ids=list(processor.metadata.text_id.values),
                     path_prefix="transformed",
                 )
             st.info("Sentiment scores successfully generated!")
+
+            # clear the progress bar
+            try:
+                sys.stdout = sys.stdout.clear()
+                sys.stdout = old_stdout
+            except:
+                pass
 
         # download button
         if os.path.exists(

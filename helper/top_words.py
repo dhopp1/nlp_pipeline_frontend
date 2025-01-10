@@ -2,8 +2,10 @@ import os
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+import sys
 
 from helper.text_transformation import initialize_processor
+from helper.progress_bar import Logger
 
 
 # gen word count csv
@@ -75,6 +77,10 @@ def gen_top_words():
                     f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_word_counts.csv"
                 )
 
+            # intialize progress bar in case necessary
+            old_stdout = sys.stdout
+            sys.stdout = Logger(st.progress(0), st.empty())
+
             processor.gen_word_count_csv(
                 text_ids=list(processor.metadata.text_id.values),
                 path_prefix="transformed",
@@ -126,6 +132,13 @@ def gen_top_words():
                         df = pd.concat([df, tmp_df], ignore_index=True)
 
             st.info("Top words successfully calculated!")
+
+            # clear the progress bar
+            try:
+                sys.stdout = sys.stdout.clear()
+                sys.stdout = old_stdout
+            except:
+                pass
 
             df.to_csv(
                 f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/top_words.csv",
