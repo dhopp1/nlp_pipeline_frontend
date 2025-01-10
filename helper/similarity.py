@@ -68,14 +68,20 @@ def gen_similarity():
 
                 # edit column names if different metadata column selected
                 plot_df.columns = list(
-                    st.session_state["metadata"][
-                        st.session_state["similarity_label"]
-                    ].values
+                    st.session_state["metadata"]
+                    .loc[
+                        lambda x: x.text_id.isin(text_ids),
+                        st.session_state["similarity_label"],
+                    ]
+                    .values
                 )
                 plot_df[st.session_state["similarity_label"]] = list(
-                    st.session_state["metadata"][
-                        st.session_state["similarity_label"]
-                    ].values
+                    st.session_state["metadata"]
+                    .loc[
+                        lambda x: x.text_id.isin(text_ids),
+                        st.session_state["similarity_label"],
+                    ]
+                    .values
                 )
                 plot_df = plot_df.loc[
                     :,
@@ -90,6 +96,31 @@ def gen_similarity():
                     f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/text_similarity.csv",
                     index=False,
                 )
+
+                # generate cluster info
+                if st.session_state["similarity_label"] == "text_id":
+                    text_id_dict = {"text_id": text_ids}
+                else:
+                    text_id_dict = {}
+                    for group in st.session_state["metadata"][
+                        st.session_state["similarity_label"]
+                    ].unique():
+                        text_id_dict[group] = list(
+                            st.session_state["metadata"].loc[
+                                lambda x: (
+                                    x[st.session_state["similarity_label"]] == group
+                                )
+                                & (x.text_id.isin(text_ids)),
+                                "text_id",
+                            ]
+                        )
+
+                cluster_df = processor.gen_cluster_df(text_id_dict=text_id_dict)
+                cluster_df.to_csv(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/text_cluster.csv",
+                    index=False,
+                )
+
             st.info("Text similarity data succcessfully generated!")
 
         if os.path.exists(
@@ -123,3 +154,24 @@ def gen_similarity():
                 ) as f:
                     p = pickle.load(f)
                 st.pyplot(p)
+
+                # display cluster plot
+                st.markdown("### Cluster plot of documents")
+                st.markdown(
+                    "For this plot, the above matrix is compressed to two dimensions via principle component analysis (PCA) to be able to be displayed on a plot. Documents that are closer together are more similar, and vice versa."
+                )
+                cluster_plot_df = pd.read_csv(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/text_cluster.csv"
+                )
+                fig = px.scatter(
+                    x=cluster_plot_df["pc1"],
+                    y=cluster_plot_df["pc2"],
+                    color=cluster_plot_df["group"],
+                )
+                fig.update_layout(
+                    yaxis_title="Principal component 2",
+                    xaxis_title="Principal component 1",
+                    title="",
+                    legend=dict(title_text=st.session_state["similarity_label"]),
+                )
+                st.plotly_chart(fig, height=450, use_container_width=True)
