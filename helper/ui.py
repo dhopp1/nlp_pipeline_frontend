@@ -111,3 +111,8 @@ def ui_download_txt_zip():
                 "application/zip",
                 help="Download raw converted text files for verification.",
             )
+            
+    st.sidebar.markdown(
+        f"""*For questions on how to use this application or its methodology, please write [Daniel Hopp](mailto:daniel.hopp@un.org)*""",
+        unsafe_allow_html=True,
+    )

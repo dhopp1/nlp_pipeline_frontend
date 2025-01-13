@@ -13,7 +13,7 @@ def search_terms_inputs():
     "info and csv upload for search terms"
     st.markdown("### Search terms")
     st.markdown(
-        "Use this section to search for terms within the corpus. For the `Execute search button to work properly, the `Replace periods` and `Remove punctuation` options must have been selected and run on the `Text transformation` tab."
+        "Use this section to search for terms within the corpus. For the `Execute search` button to work properly, the `Replace periods` and `Remove punctuation` options must have been selected and run on the `Text transformation` tab."
     )
 
     # search terms
