@@ -197,6 +197,181 @@ def search_terms_inputs():
                         help="Downloads a CSV with the count of words that occur in the context of previous search terms.",
                     )
 
+    # excel sheet with occurrences and new search terms binary found
+    with st.expander(label="Excel output and groupings"):
+        st.markdown(
+            "Generate an excel file that shows occurrences by metadata group. It shows occurrences of second-level search terms within the context of other search terms and tells what percentage of a metadata group a term is found in. So if the term is mentioned multiple times in a document, it will only count as a binary 'yes' in the `grouped` tab of the excel output. You can search for 'ors' in the second-level search term CSV as well, separate terms with a `|`. So `shipping|trade` will mark the document as containing the term if either of those terms apperas. Uses the `Second-level search terms CSV` as an input. "
+        )
+
+        if (
+            os.path.exists(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/search_terms.csv"
+            )
+            and os.path.exists(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/search_terms_all_occurrences.csv"
+            )
+            and os.path.exists(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/second_level_search_terms.csv"
+            )
+        ):
+            # selectbox with which column you want to put in the tabs of the excel sheet
+            search_columns = list(
+                pd.read_csv(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/search_terms.csv"
+                ).columns
+            )
+            st.session_state["excel_tab_column"] = st.selectbox(
+                "Search CSV column",
+                options=search_columns,
+                index=0,
+                help="Which column of the search terms CSV to split into individual excel tabs.",
+            )
+
+            st.session_state["excel_metadata_column"] = st.selectbox(
+                "Which metadata column to aggregate by",
+                options=st.session_state["metadata"]
+                .drop(
+                    [
+                        "web_filepath",
+                        "local_raw_filepath",
+                        "local_txt_filepath",
+                        "detected_language",
+                    ],
+                    axis=1,
+                )
+                .columns,
+                index=0,
+                help="Which column of the metadata to group by for a binary count of a term appears in the grouping or not/the share of the group where it appears.",
+            )
+
+            # go through unique values in that grouping
+            st.session_state["excel_button"] = st.button(
+                "Generate excel file",
+            )
+
+            if st.session_state["excel_button"]:
+                with st.spinner("Generating excel file..."):
+                    second_level_terms = pd.read_csv(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/second_level_search_terms.csv"
+                    )
+                    df = pd.read_csv(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/search_terms_all_occurrences.csv"
+                    )
+                    context_dict = {}
+                    for value in df[st.session_state["excel_tab_column"]].unique():
+                        short_val = value.lower().replace(" ", "_")[
+                            :5
+                        ]  # excel tab-friendly name
+                        context_dict[short_val] = df.loc[
+                            lambda x: x[st.session_state["excel_tab_column"]] == value,
+                            ["text_id"] + search_columns + ["character_buffer_context"],
+                        ].reset_index(drop=True)
+                        # adding metadata columns
+                        context_dict[short_val] = context_dict[short_val].merge(
+                            st.session_state["metadata"].drop(
+                                [
+                                    "web_filepath",
+                                    "local_raw_filepath",
+                                    "local_txt_filepath",
+                                    "detected_language",
+                                ],
+                                axis=1,
+                            ),
+                            how="left",
+                            on="text_id",
+                        )
+
+                        # searching for second-level search terms
+                        second_search_i = list(
+                            second_level_terms.loc[
+                                lambda x: x[st.session_state["excel_tab_column"]]
+                                == value,
+                                :,
+                            ]
+                            .iloc[:, -1]
+                            .values
+                        )
+                        for term in second_search_i:
+                            context_dict[short_val][term] = 0
+                            for i in range(len(context_dict[short_val])):
+                                search_terms = [" " + x + " " for x in term.split("|")]
+                                if any(
+                                    substring
+                                    in context_dict[short_val].loc[
+                                        i, "character_buffer_context"
+                                    ]
+                                    for substring in search_terms
+                                ):
+                                    context_dict[short_val].loc[i, term] = 1
+
+                    # aggregation by group
+                    context_dict["grouped"] = second_level_terms.copy()
+                    for metadata_value in st.session_state["metadata"][
+                        st.session_state["excel_metadata_column"]
+                    ].unique():  # going through metadata value columns
+                        context_dict["grouped"][metadata_value] = ""
+                        for i in range(
+                            len(context_dict["grouped"])
+                        ):  # going through rows
+                            # which tab checking
+                            short_val = (
+                                context_dict["grouped"]
+                                .loc[i, st.session_state["excel_tab_column"]]
+                                .lower()
+                                .replace(" ", "_")[:5]
+                            )  # excel tab-friendly name
+
+                            denominator = len(
+                                st.session_state["metadata"].loc[
+                                    lambda x: x[
+                                        st.session_state["excel_metadata_column"]
+                                    ]
+                                    == metadata_value,
+                                    :,
+                                ]
+                            )  # how many text ids in this group
+                            numerator = len(
+                                context_dict[short_val]
+                                .loc[
+                                    lambda x: (
+                                        x[st.session_state["excel_metadata_column"]]
+                                        == metadata_value
+                                    )
+                                    & (x[second_level_terms.iloc[i, -1]] == 1),
+                                    "text_id",
+                                ]
+                                .unique()
+                            )
+                            ratio = numerator / denominator
+                            context_dict["grouped"].loc[i, metadata_value] = ratio
+
+                    # write out excel file
+                    with pd.ExcelWriter(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/excel_output.xlsx"
+                    ) as writer:
+                        for key, value in context_dict.items():
+                            value.to_excel(writer, sheet_name=key, index=False)
+
+                st.info("Excel file successfully created!")
+
+            # download the excel file
+            if os.path.exists(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/excel_output.xlsx"
+            ):
+                with open(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/excel_output.xlsx",
+                    "rb",
+                ) as template_file:
+                    template_byte = template_file.read()
+
+                st.download_button(
+                    "Download excel file",
+                    template_byte,
+                    "excel_output.xlsx",
+                    "application/octet-stream",
+                    help="Download excel file.",
+                )
+
     # search for a specific term
     with st.expander(label="Individual search term"):
         st.markdown(
