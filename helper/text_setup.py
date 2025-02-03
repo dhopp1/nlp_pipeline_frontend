@@ -73,7 +73,22 @@ def process_corpus(user_name, corpus_name, uploaded_document):
                     pass
 
             # convert the files to text
-            processor.convert_to_text(list(processor.metadata.text_id.values))
+            if "force_ocr" in processor.metadata.columns:
+                ocr_text_ids = list(
+                    processor.metadata.loc[
+                        lambda x: x["force_ocr"] == 1, "text_id"
+                    ].values
+                )
+                nonocr_text_ids = list(
+                    processor.metadata.loc[
+                        lambda x: x["force_ocr"] == 0, "text_id"
+                    ].values
+                )
+                processor.convert_to_text(nonocr_text_ids)
+                with st.spinner("Converting OCR PDFs, this may take a while..."):
+                    processor.convert_to_text(ocr_text_ids, force_ocr=True)
+            else:
+                processor.convert_to_text(list(processor.metadata.text_id.values))
 
             # sync to the local metadata file
             processor.sync_local_metadata()
@@ -201,7 +216,22 @@ def process_corpus(user_name, corpus_name, uploaded_document):
                     pass
 
             # convert the files to text
-            processor.convert_to_text(list(processor.metadata.text_id.values))
+            if "force_ocr" in processor.metadata.columns:
+                ocr_text_ids = list(
+                    processor.metadata.loc[
+                        lambda x: x["force_ocr"] == 1, "text_id"
+                    ].values
+                )
+                nonocr_text_ids = list(
+                    processor.metadata.loc[
+                        lambda x: x["force_ocr"] == 0, "text_id"
+                    ].values
+                )
+                processor.convert_to_text(nonocr_text_ids)
+                with st.spinner("Converting OCR PDFs, this may take a while..."):
+                    processor.convert_to_text(ocr_text_ids, force_ocr=True)
+            else:
+                processor.convert_to_text(list(processor.metadata.text_id.values))
 
             # handle a CSV
             for file in os.listdir(f"{temp_directory}raw_files/"):

@@ -38,7 +38,7 @@ def ui_metadata_upload():
         st.session_state["uploaded_file"] = st.file_uploader(
             "",
             type=[".zip", ".docx", ".doc", ".txt", ".pdf", ".csv", ".mp3", ".mp4"],
-            help="Upload either a single `metadata.csv` file, with at least one column named `web_filepath` with the web addresses of the .html or .pdf documents, or upload a .zip file that contains a folder named `corpus` with the .csv, .doc, .docx, .txt, or .pdf files inside. You can optionally include a `metadata.csv` file in the zip file at the same level as the `corpus` folder, with at least a column named `filename` with the names of the files. If you want to only include certain page numbers of PDF files, in the metadata include a column called 'page_numbers', with the pages formatted as e.g., '1,6,9:12'.",
+            help="Upload either a single `metadata.csv` file, with at least one column named `web_filepath` with the web addresses of the .html or .pdf documents, or upload a .zip file that contains a folder named `corpus` with the .csv, .doc, .docx, .txt, or .pdf files inside. You can optionally include a `metadata.csv` file in the zip file at the same level as the `corpus` folder, with at least a column named `filename` with the names of the files. If you want to only include certain page numbers of PDF files, in the metadata include a column called 'page_numbers', with the pages formatted as e.g., '1,6,9:12'. If upon inspection of your converted files, you find some pdfs did not convert to text properly, you can include a `force_ocr` column in your metadata. Set it to `1` to convert that document to text via OCR, and a `0` to not use OCR.",
         )
 
         # set corpus name
@@ -111,7 +111,7 @@ def ui_download_txt_zip():
                 "application/zip",
                 help="Download raw converted text files for verification.",
             )
-            
+
     st.sidebar.markdown(
         f"""*For questions on how to use this application or its methodology, please write [Daniel Hopp](mailto:daniel.hopp@un.org)*""",
         unsafe_allow_html=True,
