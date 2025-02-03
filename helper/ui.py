@@ -67,8 +67,7 @@ def ui_load_corpus():
     )
 
     # list of options
-    if "corpora_list" not in server_state:
-        server_state["corpora_list"] = pd.read_csv("metadata/corpora_list.csv")
+    server_state["corpora_list"] = pd.read_csv("metadata/corpora_list.csv")
 
     st.session_state["corpora_options"] = sorted(
         [
