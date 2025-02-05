@@ -259,7 +259,8 @@ def text_transformation_inputs():
                 drop_numbers=st.session_state["remove_numbers"],
                 replace_words_with_punctuation_df=(
                     pd.read_csv(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/prepunctuation_list.csv"
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/prepunctuation_list.csv",
+                        encoding="latin1",
                     )
                     if os.path.exists(
                         f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/prepunctuation_list.csv"
@@ -269,7 +270,8 @@ def text_transformation_inputs():
                 perform_remove_punctuation=st.session_state["remove_punctuation"],
                 replace_words_df=(
                     pd.read_csv(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/postpunctuation_list.csv"
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/postpunctuation_list.csv",
+                        encoding="latin1",
                     )
                     if os.path.exists(
                         f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/postpunctuation_list.csv"
@@ -278,7 +280,8 @@ def text_transformation_inputs():
                 ),
                 exclude_words_df=(
                     pd.read_csv(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_list.csv"
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_list.csv",
+                        encoding="latin1",
                     )
                     if os.path.exists(
                         f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_list.csv"

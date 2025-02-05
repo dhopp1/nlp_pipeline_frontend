@@ -32,8 +32,8 @@ def process_corpus(user_name, corpus_name, uploaded_document):
             new_file.close()
 
         # only uploaded a metadata CSV
-        if uploaded_document.name == "metadata.csv":
-            metadata = pd.read_csv(f"{temp_directory}tmp.csv")
+        if uploaded_document.name.split(".")[-1].lower() == "csv":
+            metadata = pd.read_csv(f"{temp_directory}tmp.csv", encoding="latin1")
             if "text_id" not in list(metadata.columns):
                 metadata["text_id"] = list(range(1, len(metadata) + 1))
             metadata_addt_column_names = list(
@@ -95,7 +95,6 @@ def process_corpus(user_name, corpus_name, uploaded_document):
 
         # uploaded a single .docx, .pdf, or .txt
         elif uploaded_document.name.split(".")[-1].lower() in [
-            "csv",
             "pdf",
             "docx",
             "doc",
@@ -148,7 +147,9 @@ def process_corpus(user_name, corpus_name, uploaded_document):
             provided_metadata = os.path.exists(f"{temp_directory}metadata.csv")
 
             if provided_metadata:
-                metadata = pd.read_csv(f"{temp_directory}metadata.csv")
+                metadata = pd.read_csv(
+                    f"{temp_directory}metadata.csv", encoding="latin1"
+                )
                 metadata_addt_column_names = list(
                     metadata.columns[
                         ~metadata.columns.isin(
@@ -283,7 +284,7 @@ def process_corpus(user_name, corpus_name, uploaded_document):
             index=[0],
         )
 
-        local_corpora_dict = pd.read_csv("metadata/corpora_list.csv")
+        local_corpora_dict = pd.read_csv("metadata/corpora_list.csv", encoding="latin1")
         new_corpora_dict = pd.concat(
             [local_corpora_dict, tmp_corpus], ignore_index=True
         ).drop_duplicates()
@@ -311,66 +312,77 @@ def process_corpus(user_name, corpus_name, uploaded_document):
 
 def engage_process_corpus():
     "actually run the process corpus function"
-    if st.session_state["process_corpus_button"]:
-        # intialize progress bar in case necessary
-        old_stdout = sys.stdout
-        sys.stdout = Logger(st.progress(0), st.empty())
+    if st.session_state["new_corpus_name"] != "None":
+        if st.session_state["process_corpus_button"]:
+            # invalid name
+            if (
+                " " in st.session_state["new_corpus_name"]
+                or any(char.isupper() for char in st.session_state["new_corpus_name"])
+            ) and (st.session_state["new_corpus_name"] != "None"):
+                st.error(
+                    "The corpus name must be all lower case and using underscores instead of spaces"
+                )
+            else:
+                # intialize progress bar in case necessary
+                old_stdout = sys.stdout
+                sys.stdout = Logger(st.progress(0), st.empty())
 
-        with st.spinner("Processing corpus..."):
-            st.session_state["corpora_dict"] = process_corpus(
-                user_name=st.session_state["user_id"],
-                corpus_name=f'{st.session_state["user_id"]}_{st.session_state["new_corpus_name"]}',
-                uploaded_document=st.session_state["uploaded_file"],
-            )
+                with st.spinner("Processing corpus..."):
+                    st.session_state["corpora_dict"] = process_corpus(
+                        user_name=st.session_state["user_id"],
+                        corpus_name=f'{st.session_state["user_id"]}_{st.session_state["new_corpus_name"]}',
+                        uploaded_document=st.session_state["uploaded_file"],
+                    )
 
-            update_server_state(
-                f'{st.session_state["user_name"]}_selected_corpus',
-                st.session_state["new_corpus_name"],
-            )
+                    update_server_state(
+                        f'{st.session_state["user_name"]}_selected_corpus',
+                        st.session_state["new_corpus_name"],
+                    )
 
-        st.session_state["metadata"] = pd.read_csv(
-            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata.csv"
-        )
+                st.session_state["metadata"] = pd.read_csv(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata.csv",
+                    encoding="latin1",
+                )
 
-        # create the zip file
-        text_ids = list(st.session_state["metadata"].loc[:, "text_id"].values)
+                # create the zip file
+                text_ids = list(st.session_state["metadata"].loc[:, "text_id"].values)
 
-        # write a metadata without file_path
-        metadata = st.session_state["metadata"].drop(
-            [
-                "local_raw_filepath",
-                "local_txt_filepath",
-                "detected_language",
-            ],
-            axis=1,
-            errors="ignore",
-        )
-        metadata = metadata[
-            ["text_id"] + [col for col in metadata.columns if col != "text_id"]
-        ]
-        metadata.to_csv(
-            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata_clean.csv",
-            index=False,
-        )
-        files = [
-            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/txt_files/"
-            + str(x)
-            + ".txt"
-            for x in text_ids
-        ] + [
-            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata_clean.csv"
-        ]
+                # write a metadata without file_path
+                metadata = st.session_state["metadata"].drop(
+                    [
+                        "local_raw_filepath",
+                        "local_txt_filepath",
+                        "detected_language",
+                    ],
+                    axis=1,
+                    errors="ignore",
+                )
+                metadata = metadata[
+                    ["text_id"] + [col for col in metadata.columns if col != "text_id"]
+                ]
+                metadata.to_csv(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata_clean.csv",
+                    index=False,
+                )
+                files = [
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/txt_files/"
+                    + str(x)
+                    + ".txt"
+                    for x in text_ids
+                ] + [
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata_clean.csv"
+                ]
 
-        create_zip_file(
-            files,
-            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/raw_text.zip",
-        )
+                create_zip_file(
+                    files,
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/raw_text.zip",
+                )
 
-        st.info("Corpus successfully processed!")
+                st.info("Corpus successfully processed!")
 
-        # clear the progress bar
-        try:
-            sys.stdout = sys.stdout.clear()
-            sys.stdout = old_stdout
-        except:
-            pass
+                # clear the progress bar
+                try:
+                    sys.stdout = sys.stdout.clear()
+                    sys.stdout = old_stdout
+                except:
+                    pass
