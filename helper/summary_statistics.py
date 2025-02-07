@@ -57,16 +57,25 @@ def gen_summary_statistics():
         if os.path.exists(
             f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_summary_stats.csv"
         ):
+            pd.read_csv(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_summary_stats.csv"
+            ).to_excel(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_summary_stats.xlsx",
+                index=False,
+            )
+
+            # download button
+            with open(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_summary_stats.xlsx",
+                "rb",
+            ) as template_file:
+                template_byte = template_file.read()
+
             st.download_button(
                 "Download summary statistics",
-                pd.read_csv(
-                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_summary_stats.csv",
-                    encoding="latin1",
-                )
-                .to_csv(index=False)
-                .encode("latin1"),
-                "summary_statistics.csv",
-                "text/csv",
+                template_byte,
+                "summary_statistics.xlsx",
+                "application/octet-stream",
                 help="Download summary statistics.",
             )
 

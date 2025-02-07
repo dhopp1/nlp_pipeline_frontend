@@ -126,17 +126,25 @@ def gen_similarity():
         if os.path.exists(
             f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/text_similarity.csv"
         ):
+            pd.read_csv(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/text_similarity.csv"
+            ).to_excel(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/text_similarity.xlsx",
+                index=False,
+            )
+
+            # download button
+            with open(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/text_similarity.xlsx",
+                "rb",
+            ) as template_file:
+                template_byte = template_file.read()
 
             st.download_button(
                 "Download text similarity data",
-                pd.read_csv(
-                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/text_similarity.csv",
-                    encoding="latin1",
-                )
-                .to_csv(index=False)
-                .encode("latin1"),
-                "text_similarity.csv",
-                "text/csv",
+                template_byte,
+                "summary_statistics.xlsx",
+                "application/octet-stream",
                 help="Download text similarity data.",
             )
 
