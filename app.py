@@ -147,29 +147,30 @@ The heat map shows a similarity matrix between every document. The cluster plot 
 # metadata
 with tabs[tab_names.index("Corpus metadata")]:
     if os.path.exists(
-        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.csv"
+        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.xlsx"
     ):
         if "metadata" not in st.session_state:
-            st.session_state["metadata"] = pd.read_csv(
-                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.csv"
+            st.session_state["metadata"] = pd.read_excel(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.xlsx"
             )
+            
+        with open(
+            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata_clean.xlsx",
+            "rb",
+        ) as template_file:
+            template_byte = template_file.read()
 
         st.download_button(
             "Download metadata",
-            pd.read_csv(
-                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.csv",
-                encoding="latin1",
-            )
-            .to_csv(index=False)
-            .encode("latin1"),
-            "metadata.csv",
-            "text/csv",
+            template_byte,
+            "metadata.xlsx",
+            "application/octet-stream",
             help="Download metadata file.",
         )
 
         st.dataframe(
-            pd.read_csv(
-                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata_clean.csv"
+            pd.read_excel(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata_clean.xlsx"
             ),
             hide_index=True,
             height=800,

@@ -1,5 +1,6 @@
 fastexcel
 nlp_pipeline
+openpyxl
 pandas
 pickle
 plotly

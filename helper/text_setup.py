@@ -31,9 +31,9 @@ def process_corpus(user_name, corpus_name, uploaded_document):
             new_file.write(uploaded_document.getbuffer())
             new_file.close()
 
-        # only uploaded a metadata CSV
-        if uploaded_document.name.split(".")[-1].lower() == "csv":
-            metadata = pd.read_csv(f"{temp_directory}tmp.csv", encoding="latin1")
+        # only uploaded a metadata XLSX
+        if uploaded_document.name.split(".")[-1].lower() == "xlsx":
+            metadata = pd.read_excel(f"{temp_directory}tmp.xlsx")
             if "text_id" not in list(metadata.columns):
                 metadata["text_id"] = list(range(1, len(metadata) + 1))
             metadata_addt_column_names = list(
@@ -93,6 +93,9 @@ def process_corpus(user_name, corpus_name, uploaded_document):
             # sync to the local metadata file
             processor.sync_local_metadata()
 
+            # create an excel metadata file
+            processor.metadata.to_excel(f"{temp_directory}metadata.xlsx", index=False)
+
         # uploaded a single .docx, .pdf, or .txt
         elif uploaded_document.name.split(".")[-1].lower() in [
             "pdf",
@@ -126,17 +129,8 @@ def process_corpus(user_name, corpus_name, uploaded_document):
             # convert the files to text
             processor.convert_to_text(list(processor.metadata.text_id.values))
 
-            # handle a CSV
-            if "csv" in f"{temp_directory}tmp.{uploaded_document.name.split('.')[-1]}":
-                old_name = f"{temp_directory}txt_files/1.txt"
-                os.remove(old_name)
-                new_name = f"{temp_directory}txt_files/1.csv"
-                shutil.copyfile(
-                    f"{temp_directory}tmp.{uploaded_document.name.split('.')[-1]}",
-                    new_name,
-                )
-                # update the metadata
-                processor.metadata.loc[0, "local_txt_filepath"] = new_name
+            # create an excel metadata file
+            processor.metadata.to_excel(f"{temp_directory}metadata.xlsx", index=False)
 
         # uploaded a zip
         else:
@@ -144,11 +138,13 @@ def process_corpus(user_name, corpus_name, uploaded_document):
                 zObject.extractall(path=temp_directory)
 
             # sync the object's metadata to the local file
-            provided_metadata = os.path.exists(f"{temp_directory}metadata.csv")
+            provided_metadata = any(
+                [x.endswith("xlsx") for x in os.listdir(f"{temp_directory}")]
+            )
 
             if provided_metadata:
-                metadata = pd.read_csv(
-                    f"{temp_directory}metadata.csv", encoding="latin1"
+                metadata = pd.read_excel(
+                    f'{temp_directory}{[x for x, y in zip(os.listdir(temp_directory), [x.endswith("xlsx") for x in os.listdir(temp_directory)]) if y][0]}'
                 )
                 metadata_addt_column_names = list(
                     metadata.columns[
@@ -169,7 +165,7 @@ def process_corpus(user_name, corpus_name, uploaded_document):
                 file_list = [
                     x
                     for x in os.listdir(f"{temp_directory}corpus/")
-                    if x.split(".")[-1] in ["csv", "txt", "docx", "doc", "pdf"]
+                    if x.split(".")[-1] in ["txt", "docx", "doc", "pdf"]
                 ]
 
                 metadata = pd.DataFrame(
@@ -234,20 +230,8 @@ def process_corpus(user_name, corpus_name, uploaded_document):
             else:
                 processor.convert_to_text(list(processor.metadata.text_id.values))
 
-            # handle a CSV
-            for file in os.listdir(f"{temp_directory}raw_files/"):
-                if "csv" in file:
-                    text_id = processor.metadata.loc[
-                        lambda x: x.filename == file, "text_id"
-                    ].values[0]
-                    old_name = f"{temp_directory}txt_files/{text_id}.txt"
-                    os.remove(old_name)
-                    new_name = f"{temp_directory}txt_files/{text_id}.csv"
-                    shutil.copyfile(f"{temp_directory}raw_files/{file}", new_name)
-                    # update the metadata
-                    processor.metadata.loc[
-                        lambda x: x.filename == file, "local_txt_filepath"
-                    ] = new_name
+            # create an excel metadata file
+            processor.metadata.to_excel(f"{temp_directory}metadata.xlsx", index=False)
 
         ### upload type independent actions
 
@@ -265,21 +249,21 @@ def process_corpus(user_name, corpus_name, uploaded_document):
             ["is_csv", "local_raw_filepath", "local_txt_filepath", "detected_language"],
             axis=1,
             errors="ignore",
-        ).to_csv(f"{temp_directory}metadata.csv", index=False)
+        ).to_excel(f"{temp_directory}metadata.xlsx", index=False)
 
         # move the metadata to the appropriate place for RAG
         processor.metadata.drop(
             ["is_csv", "local_raw_filepath", "local_txt_filepath", "detected_language"],
             axis=1,
             errors="ignore",
-        ).to_csv(f"corpora/metadata_{corpus_name}.csv", index=False)
+        ).to_excel(f"corpora/metadata_{corpus_name}.xlsx", index=False)
 
         # update the corpora list
         tmp_corpus = pd.DataFrame(
             {
                 "name": corpus_name,
                 "text_path": f"corpora/{corpus_name}/",
-                "metadata_path": f"corpora/metadata_{corpus_name}.csv",
+                "metadata_path": f"corpora/metadata_{corpus_name}.xlsx",
             },
             index=[0],
         )
@@ -339,9 +323,8 @@ def engage_process_corpus():
                         st.session_state["new_corpus_name"],
                     )
 
-                st.session_state["metadata"] = pd.read_csv(
-                    f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata.csv",
-                    encoding="latin1",
+                st.session_state["metadata"] = pd.read_excel(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata.xlsx",
                 )
 
                 # create the zip file
@@ -360,8 +343,8 @@ def engage_process_corpus():
                 metadata = metadata[
                     ["text_id"] + [col for col in metadata.columns if col != "text_id"]
                 ]
-                metadata.to_csv(
-                    f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata_clean.csv",
+                metadata.to_excel(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata_clean.xlsx",
                     index=False,
                 )
                 files = [
@@ -370,7 +353,7 @@ def engage_process_corpus():
                     + ".txt"
                     for x in text_ids
                 ] + [
-                    f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata_clean.csv"
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata_clean.xlsx"
                 ]
 
                 create_zip_file(
