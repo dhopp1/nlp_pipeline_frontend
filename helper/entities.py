@@ -137,16 +137,25 @@ def gen_entities():
         if os.path.exists(
             f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/top_entities.csv"
         ):
+            pd.read_csv(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/top_entities.csv"
+            ).to_excel(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/top_entities.xlsx",
+                index=False,
+            )
+
+            # download button
+            with open(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/top_entities.xlsx",
+                "rb",
+            ) as template_file:
+                template_byte = template_file.read()
+
             st.download_button(
                 "Download top entities",
-                pd.read_csv(
-                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/top_entities.csv",
-                    encoding="latin1",
-                )
-                .to_csv(index=False)
-                .encode("latin1"),
-                "top_entities.csv",
-                "text/csv",
+                template_byte,
+                "top_entities.xlsx",
+                "application/octet-stream",
                 help="Download the top entities.",
             )
 

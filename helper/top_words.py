@@ -161,6 +161,8 @@ def gen_top_words():
                 f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/top_words.xlsx",
                 index=False,
             )
+
+            # download button
             with open(
                 f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/top_words.xlsx",
                 "rb",
