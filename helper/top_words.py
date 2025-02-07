@@ -8,7 +8,7 @@ from helper.text_transformation import initialize_processor
 from helper.progress_bar import Logger
 
 
-# gen word count csv
+# gen word count excel
 def gen_top_words():
     st.markdown("### Top words")
     st.markdown("Display the top n words in the corpus.")
@@ -58,12 +58,19 @@ def gen_top_words():
 
         if st.session_state["run_top_words_button"]:
             # generate the CSV first with all text ids regardless
-            if os.path.exists(
-                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_list.csv"
+            if (
+                len(
+                    pd.read_excel(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx",
+                        sheet_name="exclude",
+                    )
+                )
+                > 0
             ):
                 exclude_words = list(
-                    pd.read_csv(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_list.csv"
+                    pd.read_excel(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx",
+                        sheet_name="exclude",
                     )["term"]
                 )
             else:
@@ -148,16 +155,23 @@ def gen_top_words():
         if os.path.exists(
             f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/top_words.csv"
         ):
+            pd.read_csv(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/top_words.csv"
+            ).to_excel(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/top_words.xlsx",
+                index=False,
+            )
+            with open(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/top_words.xlsx",
+                "rb",
+            ) as template_file:
+                template_byte = template_file.read()
+
             st.download_button(
                 "Download top words",
-                pd.read_csv(
-                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/top_words.csv",
-                    encoding="latin1",
-                )
-                .to_csv(index=False)
-                .encode("latin1"),
-                "top_words.csv",
-                "text/csv",
+                template_byte,
+                "top_words.xlsx",
+                "application/octet-stream",
                 help="Download the top words.",
             )
 
