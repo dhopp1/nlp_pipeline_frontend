@@ -117,116 +117,136 @@ def csv_expander(
 def text_transformation_inputs():
     st.markdown("### Text transformation parameters")
     st.markdown(
-        "Use this section to transform and clean up your texts, performing operations like converting to lower case, removing punctuation, etc."
+        """
+Use this section to transform and clean up your texts, performing operations like converting to lower case, removing punctuation, etc. Use the button below to download a template. The template has three tabs:
+- `prepunctuation`: Use this list to replace words with punctuation in them, like `COVID-19` > `covid`. Punctuation can be replaced with spaces in subsequent steps, rendering 'COVID 19' no longer as one word. The CSV should have two columns, `term` and `replacement`. If you select `Perform lowercase` in the checkbox iunder `Other text transformation options` below, you can limit the terms to lowercase terms only.
+- `postpunctuation`: Use this list to replace words, like `United Nations` > `un`. The CSV should have two columns, `term` and `replacement`. If you select `Perform lowercase` in the checkbox under `Other text transformation options` below, you can limit the terms to lowercase terms only.
+- `exclude`: Use this list to exclude common terms from things like word count, like `good morning`, etc. The CSV should have one column, `term`. If you select `Perform lowercase` in the checkbox under `Other text transformation options` below, you can limit the terms to lowercase terms only. **Note** this list will not delete words from the corpus, just rather supress them from being shown in word counts. If you want to delete a term, use the `postpunctuation` tab and simply leave the `replacement` column blank.
+
+If you don't want to use one of the tabs, just leave its entries blank when uploading.
+"""
+    )
+    # template
+    with open(
+        f"metadata/transformation_parameters_template.xlsx",
+        "rb",
+    ) as template_file:
+        template_byte = template_file.read()
+
+    st.download_button(
+        "Download transformation parameters template",
+        template_byte,
+        "transformation_parameters.xlsx",
+        "application/octet-stream",
+        help="Download transformation parameters template.",
     )
 
-    # prepunctuation
-    csv_expander(
-        expander_label="Replace prepunctuation",
-        info="Use this list to replace words with punctuation in them, like `COVID-19` > `covid`. Punctuation can be replaced with spaces in subsequent steps, rendering 'COVID 19' no longer as one word. The CSV should have two columns, `term` and `replacement`. If you select `Perform lowercase` in the checkbox iunder `Other text transformation options` below, you can limit the terms to lowercase terms only.",
-        session_state_file_name="prepunctuation_uploaded_file",
-        uploader_help="Upload your csv list of terms to replace prepunctuation. It should have two columns: `term` and `replacement`",
-        uploader_button_name="prepunctuation_button",
-        uploader_button_label="Upload prepunctuation list",
-        uploader_button_help="Upload a CSV with prepunctuation replacement terms.",
-        csv_name="prepunctuation_list.csv",
-        finish_info="Prepunctuation CSV successfully uploaded!",
-        uploaded_info="Prepunctuation CSV uploaded",
-        uploaded_error="Prepunctuation CSV not uploaded",
-        download_button_name="Download prepunctuation list",
-        download_button_info="Download prepunctuation list for verification.",
+    st.markdown("### Upload your transformation parameters")
+
+    # upload your file
+    st.session_state["transformation_parameters_upload"] = st.file_uploader(
+        "Transformation parameters",
+        type=[".xlsx"],
+        help="Uploaded your transformation parameters file. It **MUST** be named `transformation_parameters.xlsx`",
     )
 
-    # postpunctuation
-    csv_expander(
-        expander_label="Replace postpunctuation",
-        info="Use this list to replace words, like `United Nations` > `un`. The CSV should have two columns, `term` and `replacement`. If you select `Perform lowercase` in the checkbox under `Other text transformation options` below, you can limit the terms to lowercase terms only.",
-        session_state_file_name="postpunctuation_uploaded_file",
-        uploader_help="Upload your csv list of terms to replace postpunctuation. It should have two columns: `term` and `replacement`",
-        uploader_button_name="postpunctuation_button",
-        uploader_button_label="Upload postpunctuation list",
-        uploader_button_help="Upload a CSV with postpunctuation replacement terms.",
-        csv_name="postpunctuation_list.csv",
-        finish_info="Postpunctuation CSV successfully uploaded!",
-        uploaded_info="Postpunctuation CSV uploaded",
-        uploaded_error="Postpunctuation CSV not uploaded",
-        download_button_name="Download postpunctuation list",
-        download_button_info="Download postpunctuation list for verification.",
+    # upload the file
+    st.session_state["transformation_parameters_button"] = st.button(
+        "Upload transformation parameters",
+        help="Uploaded your transformation parameters file. It **MUST** be named `transformation_parameters.xlsx`",
     )
 
-    # exclude words
-    csv_expander(
-        expander_label="Exclude terms",
-        info="Use this list to exclude common terms from things like word count, like `good morning`, etc. The CSV should have one column, `term`. If you select `Perform lowercase` in the checkbox under `Other text transformation options` below, you can limit the terms to lowercase terms only.",
-        session_state_file_name="exclude_uploaded_file",
-        uploader_help="Upload your csv list of terms to replace exclude. It should have one column: `term`",
-        uploader_button_name="exclude_button",
-        uploader_button_label="Upload exclude list",
-        uploader_button_help="Upload a CSV with exclusion terms.",
-        csv_name="exclude_list.csv",
-        finish_info="Exclude CSV successfully uploaded!",
-        uploaded_info="Exclude CSV uploaded",
-        uploaded_error="Exclude CSV not uploaded",
-        download_button_name="Download exclude list",
-        download_button_info="Download exclude list for verification.",
-    )
+    if os.path.exists(
+        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx"
+    ):
+        st.info(
+            "A transformation parameters excel file has already been uploaded. You can reupload and overwrite it."
+        )
+        with open(
+            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx",
+            "rb",
+        ) as template_file:
+            template_byte = template_file.read()
+
+        st.download_button(
+            "Download existing transformation parameters",
+            template_byte,
+            "transformation_parameters.xlsx",
+            "application/octet-stream",
+            help="Download transformation parameters template.",
+        )
+
+    # copy the file
+    if st.session_state["transformation_parameters_button"]:
+        with open(
+            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx",
+            "wb",
+        ) as new_file:
+            new_file.write(
+                st.session_state["transformation_parameters_upload"].getvalue()
+            )
+            new_file.close()
+
+        st.info("Transformation parameters succesfully uploaded!")
 
     # other text conversion options
-    with st.expander(label="Other text transformation options"):
-        # lower case
-        st.session_state["perform_lower"] = st.checkbox(
-            "Perform lowercase",
-            help="Whether or not to convert the texts into all lowercase.",
-        )
+    st.markdown("### Other text conversion options")
+    # lower case
+    st.session_state["perform_lower"] = st.checkbox(
+        "Perform lowercase",
+        help="Whether or not to convert the texts into all lowercase.",
+    )
 
-        # replace accented and unusual
-        st.session_state["perform_accented"] = st.checkbox(
-            "Replace accented and unusual characters",
-            help="Whether or not to replace accented and unusual characters with non-accented equivalents.",
-        )
+    # replace accented and unusual
+    st.session_state["perform_accented"] = st.checkbox(
+        "Replace accented and unusual characters",
+        help="Whether or not to replace accented and unusual characters with non-accented equivalents.",
+    )
 
-        # remove urls
-        st.session_state["remove_urls"] = st.checkbox(
-            "Remove URLs", help="Whether or not to remove URLs from the text."
-        )
+    # remove urls
+    st.session_state["remove_urls"] = st.checkbox(
+        "Remove URLs", help="Whether or not to remove URLs from the text."
+    )
 
-        # remove headers and footers
-        st.session_state["remove_headers"] = st.checkbox(
-            "Remove headers and footers",
-            help="Whether or not to remove headers/footers that may be repeated throughout a text.",
-        )
+    # remove headers and footers
+    st.session_state["remove_headers"] = st.checkbox(
+        "Remove headers and footers",
+        help="Whether or not to remove headers/footers that may be repeated throughout a text.",
+    )
 
-        # replace periods
-        st.session_state["replace_periods"] = st.checkbox(
-            "Replace periods",
-            help="Whether or not to replace periods (.) with |s for consistent word delimiters.",
-        )
+    # replace periods
+    st.session_state["replace_periods"] = st.checkbox(
+        "Replace periods",
+        help="Whether or not to replace periods (.) with |s for consistent word delimiters.",
+    )
 
-        # drop numbers
-        st.session_state["remove_numbers"] = st.checkbox(
-            "Remove numbers",
-            help="Whether or not to remove any numerals (0-9) in the text.",
-        )
+    # drop numbers
+    st.session_state["remove_numbers"] = st.checkbox(
+        "Remove numbers",
+        help="Whether or not to remove any numerals (0-9) in the text.",
+    )
 
-        # remove punctuation
-        st.session_state["remove_punctuation"] = st.checkbox(
-            "Remove punctuation",
-            help="Whether or not to replace any punctuation with spaces.",
-        )
+    # remove punctuation
+    st.session_state["remove_punctuation"] = st.checkbox(
+        "Remove punctuation",
+        help="Whether or not to replace any punctuation with spaces.",
+    )
 
-        # remove stopwords
-        st.session_state["remove_stopwords"] = st.checkbox(
-            "Remove stopwords",
-            help="Whether or not to remove stopwords (common words like 'and', 'but', etc.).",
-        )
+    # remove stopwords
+    st.session_state["remove_stopwords"] = st.checkbox(
+        "Remove stopwords",
+        help="Whether or not to remove stopwords (common words like 'and', 'but', etc.).",
+    )
 
-        # pervform stemming
-        st.session_state["perform_stemming"] = st.checkbox(
-            "Perform stemming",
-            help="Whether or not to stem the text. That is replacing words with their roots, e.g., 'running', 'runs', 'ran' are all converted to 'run'.",
-        )
+    # perform stemming
+    st.session_state["perform_stemming"] = st.checkbox(
+        "Perform stemming",
+        help="Whether or not to stem the text. That is replacing words with their roots, e.g., 'running', 'runs', 'ran' are all converted to 'run'.",
+    )
 
     # run transformation button
+    st.markdown("### Run the transformation")
+
     st.session_state["text_transform_button"] = st.button(
         "Transform text",
         help="Run the stipulated text transformations",
@@ -258,33 +278,33 @@ def text_transformation_inputs():
                 perform_replace_period=st.session_state["replace_periods"],
                 drop_numbers=st.session_state["remove_numbers"],
                 replace_words_with_punctuation_df=(
-                    pd.read_csv(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/prepunctuation_list.csv",
-                        encoding="latin1",
+                    pd.read_excel(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx",
+                        sheet_name="prepunctuation",
                     )
                     if os.path.exists(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/prepunctuation_list.csv"
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx"
                     )
                     else None
                 ),
                 perform_remove_punctuation=st.session_state["remove_punctuation"],
                 replace_words_df=(
-                    pd.read_csv(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/postpunctuation_list.csv",
-                        encoding="latin1",
+                    pd.read_excel(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx",
+                        sheet_name="postpunctuation",
                     )
                     if os.path.exists(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/postpunctuation_list.csv"
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx"
                     )
                     else None
                 ),
                 exclude_words_df=(
-                    pd.read_csv(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_list.csv",
-                        encoding="latin1",
+                    pd.read_excel(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx",
+                        sheet_name="exclude",
                     )
                     if os.path.exists(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_list.csv"
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx"
                     )
                     else None
                 ),
@@ -300,7 +320,7 @@ def text_transformation_inputs():
                 + ".txt"
                 for x in list(processor.metadata.text_id.values)
             ] + [
-                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata_clean.csv"
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata_clean.xlsx"
             ]
 
             create_zip_file(
