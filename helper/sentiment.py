@@ -48,17 +48,26 @@ def gen_sentiment():
         if os.path.exists(
             f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_sentiments.csv"
         ):
+            pd.read_csv(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_sentiments.csv"
+            ).to_excel(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_sentiments.xlsx",
+                index=False,
+            )
+
+            # download button
+            with open(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_sentiments.xlsx",
+                "rb",
+            ) as template_file:
+                template_byte = template_file.read()
+
             st.download_button(
                 "Download sentiment scores",
-                pd.read_csv(
-                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/transformed_sentiments.csv",
-                    encoding="latin1",
-                )
-                .to_csv(index=False)
-                .encode("latin1"),
-                "sentiment.csv",
-                "text/csv",
-                help="Download the sentiment scores. `avg_sentiment_w_neutral` shows the average VADER sentiment score of the document including neutral sentences. `neutral_proportion` tells the percentage of the sentences in the document that have a neutral sentiment score.",
+                template_byte,
+                "sentiment.xlsx",
+                "application/octet-stream",
+                help="Download sentiment scores.",
             )
 
             # bar plot
@@ -176,32 +185,33 @@ def gen_sentiment():
                             stringx=stringx
                         )
 
-                    sentiment_report.to_csv(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/sentiment_report.csv",
+                    sentiment_report.to_excel(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/sentiment_report.xlsx",
                         index=False,
                     )
                 st.info("Sentiment report successfully completed!")
 
             if os.path.exists(
-                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/sentiment_report.csv"
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/sentiment_report.xlsx"
             ):
+                # download button
+                with open(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/sentiment_report.xlsx",
+                    "rb",
+                ) as template_file:
+                    template_byte = template_file.read()
+
                 st.download_button(
                     "Download sentiment report",
-                    pd.read_csv(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/sentiment_report.csv",
-                        encoding="latin1",
-                    )
-                    .to_csv(index=False)
-                    .encode("latin1"),
-                    "sentiment_report.csv",
-                    "text/csv",
+                    template_byte,
+                    "sentiment_report.xlsx",
+                    "application/octet-stream",
                     help="Download the sentence by sentence sentiment report.",
                 )
 
                 # plot the sentiment report
-                plot_df = pd.read_csv(
-                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/sentiment_report.csv",
-                    encoding="latin1",
+                plot_df = pd.read_excel(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/sentiment_report.xlsx",
                 )
 
                 fig = px.line(
