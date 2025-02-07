@@ -42,78 +42,6 @@ def create_zip_file(files, zip_path):
             )
 
 
-def csv_expander(
-    expander_label,
-    info,
-    session_state_file_name,
-    uploader_help,
-    uploader_button_name,
-    uploader_button_label,
-    uploader_button_help,
-    csv_name,
-    finish_info,
-    uploaded_info,
-    uploaded_error,
-    download_button_name,
-    download_button_info,
-):
-    with st.expander(label=expander_label):
-        st.markdown(info)
-
-        st.session_state[session_state_file_name] = st.file_uploader(
-            "",
-            type=[".csv"],
-            help=uploader_help,
-        )
-
-        # upload the file
-        st.session_state[uploader_button_name] = st.button(
-            uploader_button_label,
-            help=uploader_button_help,
-        )
-
-        # copy the file
-        if st.session_state[uploader_button_name]:
-            with open(
-                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/{csv_name}",
-                "wb",
-            ) as new_file:
-                new_file.write(
-                    st.session_state[session_state_file_name]
-                    .getvalue()
-                    .decode("latin1")
-                    .encode("latin1")
-                )
-                new_file.close()
-
-            st.info(finish_info)
-
-        # show status of upload
-        if os.path.exists(
-            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/{csv_name}"
-        ):
-            st.info(uploaded_info)
-        else:
-            st.error(uploaded_error)
-
-        # download the file
-        if os.path.exists(
-            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/{csv_name}"
-        ):
-            st.download_button(
-                download_button_name,
-                pd.read_csv(
-                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/{csv_name}",
-                    encoding="latin1",
-                )
-                .to_csv(index=False)
-                .encode("latin1"),
-                csv_name,
-                "text/csv",
-                help=download_button_info,
-            )
-
-
 def text_transformation_inputs():
     st.markdown("### Text transformation parameters")
     st.markdown(
@@ -128,7 +56,7 @@ If you don't want to use one of the tabs, just leave its entries blank when uplo
     )
     # template
     with open(
-        f"metadata/transformation_parameters_template.xlsx",
+        "metadata/transformation_parameters_template.xlsx",
         "rb",
     ) as template_file:
         template_byte = template_file.read()
@@ -147,13 +75,13 @@ If you don't want to use one of the tabs, just leave its entries blank when uplo
     st.session_state["transformation_parameters_upload"] = st.file_uploader(
         "Transformation parameters",
         type=[".xlsx"],
-        help="Uploaded your transformation parameters file. It **MUST** be named `transformation_parameters.xlsx`",
+        help="Upload your transformation parameters file. It **MUST** be named `transformation_parameters.xlsx`",
     )
 
     # upload the file
     st.session_state["transformation_parameters_button"] = st.button(
         "Upload transformation parameters",
-        help="Uploaded your transformation parameters file. It **MUST** be named `transformation_parameters.xlsx`",
+        help="Upload your transformation parameters file. It **MUST** be named `transformation_parameters.xlsx`",
     )
 
     if os.path.exists(
@@ -173,7 +101,7 @@ If you don't want to use one of the tabs, just leave its entries blank when uplo
             template_byte,
             "transformation_parameters.xlsx",
             "application/octet-stream",
-            help="Download transformation parameters template.",
+            help="Download existing transformation parameters.",
         )
 
     # copy the file
