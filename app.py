@@ -6,6 +6,7 @@ from streamlit_server_state import server_state
 from helper.text_setup import engage_process_corpus
 from helper.ui import (
     import_styles,
+    ui_delete_corpus,
     ui_download_txt_zip,
     ui_header,
     ui_load_corpus,
@@ -46,6 +47,14 @@ ui_load_corpus()
 # download raw text file button
 ui_download_txt_zip()
 
+# delete corpus button
+ui_delete_corpus()
+
+st.sidebar.markdown(
+    """*For questions on how to use this application or its methodology, please write [Daniel Hopp](mailto:daniel.hopp@un.org)*""",
+    unsafe_allow_html=True,
+)
+
 
 ### tabs
 tab_names = [
@@ -84,9 +93,9 @@ This table shows the documents alongside any additional metadata you've chosen t
 ### Text transformation
 Before you begin analyzing the corpus, you have the ability to perform various transformations on it first.
 
-- `Replace prepunctuation`: you can upload a CSV with terms you want to replace in the text that include punctuation. For instance, you may want to replace "COVID-19" with "covid". The reason there is a prepunctuation adn postpunctuation replacement is that one of the subsequent transformations you can perform replaces punctuation with space. So "COVID-19" would be replaced with "COVID 19" and would no longer be considered one word.
-- `Replace postpunctuation`: you can upload a CSV with terms you want to replace in the text. For instance, you could replace "the US" and "United States of America" with "usa". The replacement will occur after the option to `Perform lowercase` found in the `Other text transformation options` section, so if you choose that option, you can limit your replacement list to lower case only terms.
-- `Exclude terms`: you can upload a CSV to exclude/remove common terms from the text, such as "good morning", etc., in case you don't want to count them in e.g., most common words.
+- `Replace prepunctuation`: you can specify terms you want to replace in the text that include punctuation. Do so in the `prepunctuation` tab of the `transformation_parameters.xlsx` file. For instance, you may want to replace "COVID-19" with "covid". The reason there is a prepunctuation adn postpunctuation replacement is that one of the subsequent transformations you can perform replaces punctuation with space. So "COVID-19" would be replaced with "COVID 19" and would no longer be considered one word.
+- `Replace postpunctuation`: you can specify terms you want to replace in the text. Do so in the `postpunctuation` tab of the `transformation_parameters.xlsx` file. For instance, you could replace "the US" and "United States of America" with "usa". The replacement will occur after the option to `Perform lowercase` found in the `Other text transformation options` section, so if you choose that option, you can limit your replacement list to lower case only terms.
+- `Exclude terms`: you can specify terms to exclude/remove common terms from the text, such as "good morning", etc., in case you don't want to count them in e.g., most common words. Do so in the `exclude` tab of the `transformation_parameters.xlsx` file.
 - `Perform lowercase`: whether or not to convert all the documents to lower case.
 - `Replace accented and unusual characters`: whether or not to replace accented characters with unaccented versions of them. E.g., "ä" will be replaced with "a".
 - `Remove URLs`: whether or not to remove URLs from the text.
@@ -97,16 +106,16 @@ Before you begin analyzing the corpus, you have the ability to perform various t
 - `Remove stopwords`: this will remove common words from the text, such as "and", "with", etc.
 - `Perform stemming`: this will convert words to their root. E.g., 'running', 'runs', 'ran' would all be converted to 'run'.
 
-Once desired CSV term lists have been uploaded and transformations have been selected, click the `Transform text` button to perform the transformation. You can download the transformed text documents with the `Download transformed text documents` button for validation.
+Once `transformation_parameters.xlsx` has been uploaded and transformations have been selected, click the `Transform text` button to perform the transformation. You can download the transformed text documents with the `Download transformed text documents` button for validation.
 
 ### Search terms
-This section enable the searching of specific terms within the corpus, as well as returning the contexts where they appear. Upload a `Search terms CSV` containing the desired search terms. The CSV can have multiple columns for grouping the search terms, but only the rightmost columns' contents will be searched for.
+This section enable the searching of specific terms within the corpus, as well as returning the contexts where they appear. Upload the `search_terms.xlsx` file containing the desired search terms on the `search_terms` sheet. The sheet can have multiple columns for grouping the search terms, but only the rightmost columns' contents will be searched for.
 
 Under `Search parameters`, `Length of character buffer` tells the number of characters in either direction of the found term to return as context of the term. `Co-occurring n words limit` stipulates how many top co-occurring words to return. E.g., if "trade" is the search term, a value of 50 here will let you see the top 50 words that occur in the contexts that contain the term "trade".
 
-`Second-level search terms CSV` allows you to upload a CSV to search for terms within the contexts of existing search terms. For instance, if you previously searched for "trade", you could then search for "tariff" and see how many times the word "tariff" occurs in the context where "trade" is mentioned.
+The `second_level_search_terms` sheet of the `search_terms.xlsx` file allows you to search for terms within the contexts of existing search terms. For instance, if you previously searched for "trade", you could then search for "tariff" and see how many times the word "tariff" occurs in the context where "trade" is mentioned.
 
-Once CSVs have been uploaded, click the `Execute search` button to perform the search. From the `Outputs` section, you can download the contexts of all the found search terms, the number of found terms, and the count of co-occurring words.
+Once the `search_terms.xlsx` file has been uploaded, click the `Execute search` button to perform the search. From the `Outputs` section, you can download the contexts of all the found search terms, the number of found terms, and the count of co-occurring words.
 
 In the `Individual search term` section you can perform and visualize the results of searching for a single term. Enter the term in the `Search term` field, then hit `Execute individual term search` to perform the search. You can group the results by a column in the metadata.
 
@@ -117,7 +126,7 @@ Here, you can see the top occurring words in the corpus.
 - `List of text ids to consider in the count`: a comma-separated list of text ids to consider when calculating the top occurring words. E.g., if you want to only consider some documents, you can enter `1,4,6` in this field.
 - `Metadata column groupiong to consider in teh count`: you can also select a metadata column to gropu the results by. Say `year` is a column in the metadata, you could view the top words for all documents from e.g., 2024 and 2023.
 - `Generate top words`: push this button to run the calculation.
-- `Download top words`: push this button to download the CSV with the results.
+- `Download top words`: push this button to download the Excel file with the results.
 
 Once you click `Generate top words`, you will see a bar plot and word cloud of the most commonly occurring words.
 
@@ -153,7 +162,7 @@ with tabs[tab_names.index("Corpus metadata")]:
             st.session_state["metadata"] = pd.read_excel(
                 f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.xlsx"
             )
-            
+
         with open(
             f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata_clean.xlsx",
             "rb",

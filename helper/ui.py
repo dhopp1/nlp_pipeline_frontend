@@ -1,4 +1,6 @@
 import os
+import shutil
+import time
 import pandas as pd
 from streamlit_server_state import server_state
 import streamlit as st
@@ -111,7 +113,39 @@ def ui_download_txt_zip():
                 help="Download raw converted text files for verification.",
             )
 
-    st.sidebar.markdown(
-        f"""*For questions on how to use this application or its methodology, please write [Daniel Hopp](mailto:daniel.hopp@un.org)*""",
-        unsafe_allow_html=True,
-    )
+
+def ui_delete_corpus():
+    "delete a corpus"
+    if st.session_state["selected_corpus"] != "None":
+        st.session_state["delete_button"] = st.sidebar.button("Delete selected corpus")
+
+        if st.session_state["delete_button"]:
+            # delete it from metadata corpora list
+            cl = pd.read_csv("metadata/corpora_list.csv")
+            cl = cl.loc[
+                lambda x: x["name"]
+                != f"{st.session_state['user_id']}_{st.session_state['selected_corpus']}",
+                :,
+            ].reset_index(drop=True)
+            cl.to_csv("metadata/corpora_list.csv", index=False, encoding="latin1")
+
+            # delete the metadata file
+            try:
+                os.remove(
+                    f"corpora/metadata_{st.session_state['user_id']}_{st.session_state['selected_corpus']}.xlsx"
+                )
+            except:
+                os.remove(
+                    f"corpora/metadata_{st.session_state['user_id']}_{st.session_state['selected_corpus']}.csv"
+                )
+
+            # delete the directory
+            shutil.rmtree(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}"
+            )
+            st.sidebar.markdown(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}"
+            )
+
+            st.sidebar.info("Corpus successfully deleted!")
+            time.sleep(2)
