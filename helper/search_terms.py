@@ -241,7 +241,7 @@ Use this section to search for terms within the corpus. For the `Execute search`
                     dfs[f"text_id_by_{col}"] = pd.read_csv(
                         f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/search_terms_grouped_by_{col}.csv",
                         encoding="latin1",
-                    )
+                    ).rename({"group": "text_id"}, axis=1)
 
                 # create excel
                 with pd.ExcelWriter(
