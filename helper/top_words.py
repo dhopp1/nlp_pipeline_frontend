@@ -71,7 +71,7 @@ def gen_top_words():
                     pd.read_excel(
                         f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx",
                         sheet_name="exclude",
-                    )["term"]
+                    ).iloc[:, 0]
                 )
             else:
                 exclude_words = []
