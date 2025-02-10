@@ -192,6 +192,13 @@ If you don't want to use one of the tabs, just leave its entries blank when uplo
 
             processor = initialize_processor()
 
+            # converting to string
+            exclude_df = pd.read_excel(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx",
+                sheet_name="exclude",
+            )
+            exclude_df.iloc[:, 0] = exclude_df.iloc[:, 0].astype(str)
+
             processor.transform_text(
                 text_ids=list(processor.metadata.text_id.values),
                 path_prefix="transformed",
@@ -227,10 +234,7 @@ If you don't want to use one of the tabs, just leave its entries blank when uplo
                     else None
                 ),
                 exclude_words_df=(
-                    pd.read_excel(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx",
-                        sheet_name="exclude",
-                    )
+                    exclude_df
                     if os.path.exists(
                         f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx"
                     )
