@@ -129,6 +129,18 @@ Use this section to search for terms within the corpus. For the `Execute search`
                     character_buffer=st.session_state["character_buffer"],
                 )
 
+                # search terms per document (for count per 1000, etc.)
+                processor.gen_aggregated_search_terms(
+                    group_names=list(processor.metadata.text_id.values),
+                    text_ids=[[x] for x in list(processor.metadata.text_id.values)],
+                    search_terms_df=pd.read_excel(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/search_terms.xlsx",
+                        sheet_name="search_terms",
+                    ),
+                    path_prefix="transformed",
+                    character_buffer=st.session_state["character_buffer"],
+                )
+
                 # co-occurring terms
                 processor.gen_co_occurring_terms(
                     group_name="all",
@@ -218,6 +230,16 @@ Use this section to search for terms within the corpus. For the `Execute search`
                 ):
                     dfs["second_level_search"] = pd.read_csv(
                         f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/search_terms_all_second_level_counts.csv",
+                        encoding="latin1",
+                    )
+
+                # grouped by text id for everything on a per document level
+                for col in pd.read_excel(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/search_terms.xlsx",
+                    sheet_name="search_terms",
+                ).columns:
+                    dfs[f"text_id_by_{col}"] = pd.read_csv(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/search_terms_grouped_by_{col}.csv",
                         encoding="latin1",
                     )
 
