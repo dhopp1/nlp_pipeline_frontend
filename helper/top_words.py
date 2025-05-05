@@ -58,22 +58,25 @@ def gen_top_words():
 
         if st.session_state["run_top_words_button"]:
             # generate the CSV first with all text ids regardless
-            if (
-                len(
-                    pd.read_excel(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx",
-                        sheet_name="exclude",
+            try:
+                if (
+                    len(
+                        pd.read_excel(
+                            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx",
+                            sheet_name="exclude",
+                        )
                     )
-                )
-                > 0
-            ):
-                exclude_words = list(
-                    pd.read_excel(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx",
-                        sheet_name="exclude",
-                    ).iloc[:, 0]
-                )
-            else:
+                    > 0
+                ):
+                    exclude_words = list(
+                        pd.read_excel(
+                            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformation_parameters.xlsx",
+                            sheet_name="exclude",
+                        ).iloc[:, 0]
+                    )
+                else:
+                    exclude_words = []
+            except:
                 exclude_words = []
 
             # remove an existing word count file
