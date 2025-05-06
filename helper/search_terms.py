@@ -43,7 +43,7 @@ Use this section to search for terms within the corpus. For the `Execute search`
     st.session_state["search_terms_upload"] = st.file_uploader(
         "Search terms",
         type=[".xlsx"],
-        help="Upload your transformation parameters file. It **MUST** be named `search_terms.xlsx`",
+        help="Upload your search terms file. It **MUST** be named `search_terms.xlsx`",
     )
 
     # upload the file
@@ -82,6 +82,88 @@ Use this section to search for terms within the corpus. For the `Execute search`
             new_file.close()
 
         st.info("Search terms succesfully uploaded!")
+
+    # match exclusion
+    with st.expander("Exclude occurrences from search matches"):
+        st.markdown("### Exclude occurrences from search matches")
+        st.markdown(
+            "You can run the search process, then go through and determine if you want to exclude any match occurrences from downstream metrics. For instance, if you have deemed some to be irrelevant or off-topic. To do so, upload here an excel with two columns, `permutation` and `sentence_context`. In the former, put the permutation/word/term that was being searched for where the occurrence was matched. In the latter, put the `sentence_context` exactly as it appears in the `search_terms_output.xlsx` workbook, `all_occurrences` sheet, `sentence_context` column. Once you have uploaded the file here, press the `Execute search` button again."
+        )
+
+        # template
+        with open(
+            "metadata/exclude_occurrences_template.xlsx",
+            "rb",
+        ) as template_file:
+            template_byte = template_file.read()
+
+        st.download_button(
+            "Download exclude occurrences template",
+            template_byte,
+            "exclude_occurrences.xlsx",
+            "application/octet-stream",
+            help="Download exclude occurrences template.",
+        )
+
+        # upload your file
+        st.session_state["exclude_occurrences_upload"] = st.file_uploader(
+            "Exclude occurrences file",
+            type=[".xlsx"],
+            help="Upload your exclude occurrences file. It **MUST** be named `exclude_occurrences.xlsx`",
+        )
+
+        # upload the file
+        st.session_state["exclude_occurrences_button"] = st.button(
+            "Upload exclude occurrences file",
+            help="Upload your exclude occurrences file. It **MUST** be named `exclude_occurrences.xlsx`",
+        )
+
+        if os.path.exists(
+            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_occurrences.xlsx"
+        ):
+            st.info(
+                "An exclude occurrences excel file has already been uploaded. You can reupload and overwrite it."
+            )
+            with open(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_occurrences.xlsx",
+                "rb",
+            ) as template_file:
+                template_byte = template_file.read()
+
+            st.download_button(
+                "Download existing exclude occurrences file",
+                template_byte,
+                "exclude_occurrences.xlsx",
+                "application/octet-stream",
+                help="Download existing exclude occurrences file.",
+            )
+
+        # copy the file
+        if st.session_state["exclude_occurrences_button"]:
+            with open(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_occurrences.xlsx",
+                "wb",
+            ) as new_file:
+                new_file.write(
+                    st.session_state["exclude_occurrences_upload"].getvalue()
+                )
+                new_file.close()
+
+            st.session_state["exclude_occurrences"] = pd.read_excel(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_occurrences.xlsx"
+            )
+
+            st.info("Exclude occurrences file succesfully uploaded!")
+
+        if "exclude_occurrences" not in st.session_state:
+            st.session_state["exclude_occurrences"] = None
+        else:
+            if os.path.exists(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_occurrences.xlsx"
+            ):
+                st.session_state["exclude_occurrences"] = pd.read_excel(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/exclude_occurrences.xlsx"
+                )
 
     # other search term parameters
     st.markdown("### Other search term parameters")
@@ -127,6 +209,7 @@ Use this section to search for terms within the corpus. For the `Execute search`
                     ),
                     path_prefix="transformed",
                     character_buffer=st.session_state["character_buffer"],
+                    match_exclusion=st.session_state["exclude_occurrences"],
                 )
 
                 # search terms per document (for count per 1000, etc.)
