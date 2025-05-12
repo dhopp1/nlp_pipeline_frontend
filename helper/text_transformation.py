@@ -118,7 +118,12 @@ If you don't want to use one of the tabs, just leave its entries blank when uplo
         st.info("Transformation parameters succesfully uploaded!")
 
     # other text conversion options
-    st.markdown("### Other text conversion options")
+    st.markdown(
+        """### Other text conversion options
+
+The order the conversion happens is: `Perform lowercase` > `Replace accented and usual characters` > `Remove URLs` > `Remove headers and footers` > `Replace periods` > `Words are replaced according to the uploaded 'prepunctuation' list` > `Remove punctuation` > `Remove numbers` > `Words are replaced according to the uploaded 'postpunctuation' list` > `Words are removed according to the uploaded 'exclude' list` >`Remove stopwords` > `Perform stemming`
+"""
+    )
     # lower case
     st.session_state["perform_lower"] = st.checkbox(
         "Perform lowercase",
@@ -148,16 +153,16 @@ If you don't want to use one of the tabs, just leave its entries blank when uplo
         help="Whether or not to replace periods (.) with |s for consistent word delimiters.",
     )
 
-    # drop numbers
-    st.session_state["remove_numbers"] = st.checkbox(
-        "Remove numbers",
-        help="Whether or not to remove any numerals (0-9) in the text.",
-    )
-
     # remove punctuation
     st.session_state["remove_punctuation"] = st.checkbox(
         "Remove punctuation",
         help="Whether or not to replace any punctuation with spaces.",
+    )
+
+    # drop numbers
+    st.session_state["remove_numbers"] = st.checkbox(
+        "Remove numbers",
+        help="Whether or not to remove any numerals (0-9) in the text.",
     )
 
     # remove stopwords
