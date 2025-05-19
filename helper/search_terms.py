@@ -633,17 +633,20 @@ Use this section to search for terms within the corpus. For the `Execute search`
         )
 
         # bar plot
-        plot_df = pd.read_excel(
-            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/individual_search_results.xlsx"
-        )
-        fig = px.bar(
-            plot_df,
-            x=plot_df.columns[0],
-            y="count",
-        )
-        fig.update_layout(
-            yaxis_title="Count",
-            xaxis_title="",
-            title=f"Occurrence of '{plot_df.loc[0, 'search_term']}' in documents",
-        )
-        st.plotly_chart(fig, height=450, use_container_width=True)
+        try:
+            plot_df = pd.read_excel(
+                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/individual_search_results.xlsx"
+            )
+            fig = px.bar(
+                plot_df,
+                x=plot_df.columns[0],
+                y="count",
+            )
+            fig.update_layout(
+                yaxis_title="Count",
+                xaxis_title="",
+                title=f"Occurrence of '{plot_df.loc[0, 'search_term']}' in documents",
+            )
+            st.plotly_chart(fig, height=450, use_container_width=True)
+        except:
+            pass
