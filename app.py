@@ -76,12 +76,12 @@ with tabs[tab_names.index("README")]:
     st.markdown(
         """
 ### What is this tool?
-"NLP" stands for "natural language processing". This tool allows you to analyze large corpora of written and spoken natural language to gain various data insights. This README will walk you through the basics of the tools' use, but there are additional tooltips for most elements. Hover over the small question marks in circles to get more information about a specific element. For any questions on how to use the tool, please contact [Daniel Hopp](mailto:daniel.hopp@un.org).
+"NLP" stands for "natural language processing". This tool allows you to analyze large corpora of written and spoken natural language to gain various data insights. This README will walk you through the basics of the tool's use, but there are additional tooltips for most elements. Hover over the small question marks in circles to get more information about a specific element. For any questions on how to use the tool, please contact [Daniel Hopp](mailto:daniel.hopp@un.org).
 
 ### Loading a corpus
 To load a new corpus into the system for analysis, uncollapse the `Options` dropdown under the `Upload your metadata file or documents`. Upload either your zip file of documents or metadata file with URL links to the documents. If using links to e.g., PDFs, make sure the link is to the actual PDF itself, not a landing page. The system can handle the following formats for documents: `DOCX`, `DOC`, `TXT`, `PDF`, `MP3`, `MP4`. View the tooltip next to the upload box for more information on how to format your document upload.
 
-Once the corpus is uploaded, choose a name for this corpus in the `Uploaded corpus name` text field. Note that if you choose a name that you have already used before, the corpus will be overwritte. Then hit the `Convert to text` button. This will convert the documents to raw text.
+Once the corpus is uploaded, choose a name for this corpus in the `Uploaded corpus name` text field. Note that if you choose a name that you have already used before, the corpus will be overwritten. Then hit the `Convert to text` button. This will convert the documents to raw text.
 
 If you come back to the site having already uploaded a corpus before, you can load that corpus by selecting its name from the `Corpus name` dropdown on the sidebar. You can additionally click `Download documents converted to text` to get a .zip file of the corpus in raw text.
 
