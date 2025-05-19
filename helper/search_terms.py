@@ -645,7 +645,7 @@ Use this section to search for terms within the corpus. For the `Execute search`
             fig.update_layout(
                 yaxis_title="Count",
                 xaxis_title="",
-                title=f"Occurrence of '{plot_df.loc[0, 'search_term']}' in documents",
+                #title=f"Occurrence of '{plot_df.loc[0, 'search_term']}' in documents",
             )
             st.plotly_chart(fig, height=450, use_container_width=True)
         except:
