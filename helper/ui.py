@@ -2,7 +2,6 @@ import os
 import shutil
 import time
 import pandas as pd
-from streamlit_server_state import server_state
 import streamlit as st
 
 
@@ -69,13 +68,13 @@ def ui_load_corpus():
     )
 
     # list of options
-    server_state["corpora_list"] = pd.read_csv("metadata/corpora_list.csv")
+    st.session_state["corpora_list"] = pd.read_csv("metadata/corpora_list.csv")
 
     st.session_state["corpora_options"] = sorted(
         [
             x.replace(st.session_state["user_id"] + "_", "")
             for x in list(
-                server_state["corpora_list"]
+                st.session_state["corpora_list"]
                 .loc[lambda x: x.name.str.contains(st.session_state["user_id"]), "name"]
                 .values
             )

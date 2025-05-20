@@ -22,7 +22,8 @@ def gen_similarity():
     )
 
     if "metadata" in st.session_state:
-        processor = initialize_processor()
+        with st.spinner("Loading corpus..."):
+            processor = initialize_processor()
 
         if st.session_state["similarity_text_ids"] == "":
             text_ids = list(processor.metadata.text_id.values)

@@ -27,7 +27,8 @@ def gen_entities():
     )
 
     if "metadata" in st.session_state:
-        processor = initialize_processor()
+        with st.spinner("Loading corpus..."):
+            processor = initialize_processor()
 
         st.session_state["top_entities_groups"] = st.selectbox(
             "Metadata column grouping to consider in the count",

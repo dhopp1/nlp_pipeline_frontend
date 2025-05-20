@@ -1,7 +1,6 @@
 import os
 import pandas as pd
 import streamlit as st
-from streamlit_server_state import server_state
 
 from helper.text_setup import engage_process_corpus
 from helper.ui import (

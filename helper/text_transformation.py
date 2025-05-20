@@ -3,7 +3,6 @@ import os
 from nlp_pipeline.nlp_pipeline import nlp_processor
 import pandas as pd
 import streamlit as st
-from streamlit_server_state import server_state, server_state_lock, no_rerun
 import zipfile
 
 
@@ -26,8 +25,14 @@ def initialize_processor():
         windows_tesseract_path=None,
         windows_poppler_path=None,
     )
-    processor.refresh_object_metadata()
-    processor.sync_local_metadata()
+    try:
+        processor.refresh_object_metadata()
+    except:
+        pass
+    try:
+        processor.sync_local_metadata()
+    except:
+        pass
 
     return processor
 
@@ -195,7 +200,8 @@ The order the conversion happens is: `Perform lowercase` > `Replace accented and
                     f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/transformed_txt_files/{file}"
                 )
 
-            processor = initialize_processor()
+            with st.spinner("Loading corpus..."):
+                processor = initialize_processor()
 
             # converting to string
             try:

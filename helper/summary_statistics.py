@@ -26,7 +26,8 @@ def gen_summary_statistics():
     )
 
     if "metadata" in st.session_state:
-        processor = initialize_processor()
+        with st.spinner("Loading corpus..."):
+            processor = initialize_processor()
 
         # run button
         st.session_state["run_summary_button"] = st.button(

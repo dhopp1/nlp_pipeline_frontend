@@ -8,10 +8,8 @@ from nlp_pipeline.nlp_pipeline import nlp_processor
 import pandas as pd
 from zipfile import ZipFile
 import streamlit as st
-from streamlit_server_state import server_state
 
 from helper.text_transformation import create_zip_file
-from helper.user_management import update_server_state
 from helper.progress_bar import Logger
 
 
@@ -318,10 +316,9 @@ def engage_process_corpus():
                         uploaded_document=st.session_state["uploaded_file"],
                     )
 
-                    update_server_state(
-                        f'{st.session_state["user_name"]}_selected_corpus',
-                        st.session_state["new_corpus_name"],
-                    )
+                    st.session_state["selected_corpus"] = st.session_state[
+                        "new_corpus_name"
+                    ]
 
                 st.session_state["metadata"] = pd.read_excel(
                     f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/metadata.xlsx",
