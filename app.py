@@ -38,7 +38,6 @@ import_styles()
 ### clear out partial corpora
 validate_corpora()
 
-
 ### sidebar
 ui_metadata_upload()
 engage_process_corpus()  # convert to text
@@ -59,23 +58,39 @@ st.sidebar.markdown(
 )
 
 
-### tabs
-tab_names = [
-    "README",
-    "Corpus metadata",
-    "Text transformation",
-    "Search terms",
-    "Top words",
-    "Top entities",
-    "Sentiment",
-    "Summary statistics",
-    "Text similarity",
-]
+# tabs/pills
+if os.path.exists(
+    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.xlsx"
+):
+    if "metadata" not in st.session_state:
+        st.session_state["metadata"] = pd.read_excel(
+            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.xlsx"
+        )
 
-tabs = st.tabs(tab_names)
+if st.session_state["selected_corpus"] == "None":
+    options = ["README"]
+else:
+    options = [
+        "README",
+        "Corpus metadata",
+        "Text transformation",
+        "Search terms",
+        "Top words",
+        "Top entities",
+        "Sentiment",
+        "Summary statistics",
+        "Text similarity",
+    ]
 
-# README
-with tabs[tab_names.index("README")]:
+st.pills(
+    "tab",
+    options=options,
+    default="README",
+    key="selected_tab",
+    label_visibility="collapsed",
+)
+
+if st.session_state["selected_tab"] == "README":
     st.markdown(
         """
 ### What is this tool?
@@ -155,68 +170,39 @@ This section calculates the similarity between the documents using the [TF-IDF](
 The heat map shows a similarity matrix between every document. The cluster plot condenses the similarity matrix to two dimensions then plots them, letting you see visually how close or far different documents are to each other.
 """
     )
+elif st.session_state["selected_tab"] == "Corpus metadata":
+    with open(
+        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata_clean.xlsx",
+        "rb",
+    ) as template_file:
+        template_byte = template_file.read()
 
-# metadata
-with tabs[tab_names.index("Corpus metadata")]:
-    if os.path.exists(
-        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.xlsx"
-    ):
-        if "metadata" not in st.session_state:
-            st.session_state["metadata"] = pd.read_excel(
-                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata.xlsx"
-            )
+    st.download_button(
+        "Download metadata",
+        template_byte,
+        "metadata.xlsx",
+        "application/octet-stream",
+        help="Download metadata file.",
+    )
 
-        with open(
-            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata_clean.xlsx",
-            "rb",
-        ) as template_file:
-            template_byte = template_file.read()
-
-        st.download_button(
-            "Download metadata",
-            template_byte,
-            "metadata.xlsx",
-            "application/octet-stream",
-            help="Download metadata file.",
-        )
-
-        st.dataframe(
-            pd.read_excel(
-                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata_clean.xlsx"
-            ),
-            hide_index=True,
-            height=800,
-        )
-    else:
-        st.error(
-            "Upload your metadata file or corpus under the `Options` dropdown on the sidebar, then hit `Convert to text`. If you have already processed a corpus, select its name under the `Corpus name` dropdown on the sidebar."
-        )
-
-# text transformation
-with tabs[tab_names.index("Text transformation")]:
+    st.dataframe(
+        pd.read_excel(
+            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/metadata_clean.xlsx"
+        ),
+        hide_index=True,
+        height=800,
+    )
+if st.session_state["selected_tab"] == "Text transformation":
     text_transformation_inputs()
-
-# search terms
-with tabs[tab_names.index("Search terms")]:
+elif st.session_state["selected_tab"] == "Search terms":
     search_terms_inputs()
-
-# word counts
-with tabs[tab_names.index("Top words")]:
+elif st.session_state["selected_tab"] == "Top words":
     gen_top_words()
-
-# entity counts
-with tabs[tab_names.index("Top entities")]:
+elif st.session_state["selected_tab"] == "Top entities":
     gen_entities()
-
-
-# sentiment
-with tabs[tab_names.index("Sentiment")]:
+elif st.session_state["selected_tab"] == "Sentiment":
     gen_sentiment()
-
-# summary statistics
-with tabs[tab_names.index("Summary statistics")]:
+elif st.session_state["selected_tab"] == "Summary statistics":
     gen_summary_statistics()
-
-# text similarity
-with tabs[tab_names.index("Text similarity")]:
+elif st.session_state["selected_tab"] == "Text similarity":
     gen_similarity()
