@@ -5,4 +5,3 @@ pandas
 pickle
 plotly
 streamlit
-streamlit-server-state

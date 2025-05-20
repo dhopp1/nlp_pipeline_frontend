@@ -309,7 +309,11 @@ def engage_process_corpus():
                 old_stdout = sys.stdout
                 sys.stdout = Logger(st.progress(0), st.empty())
 
-                with st.spinner("Processing corpus..."):
+                with st.spinner("Processing corpus...", show_time=True):
+                    st.warning(
+                        "If this is taking a while, you may have OCR (scanned) documents in your corpus. These take significantly longer to convert to text. Be patient and don't reload or close the page until you see the message `Corpus successfully processed!` in blue below."
+                    )
+
                     st.session_state["corpora_dict"] = process_corpus(
                         user_name=st.session_state["user_id"],
                         corpus_name=f'{st.session_state["user_id"]}_{st.session_state["new_corpus_name"]}',
@@ -358,7 +362,33 @@ def engage_process_corpus():
                     f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/raw_text.zip",
                 )
 
-                st.info("Corpus successfully processed!")
+                # check if valid txt files
+                valid_txts = False
+                if (
+                    len(
+                        os.listdir(
+                            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/txt_files/"
+                        )
+                    )
+                    > 0
+                ):
+                    for filename in os.listdir(
+                        f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/txt_files/"
+                    ):
+                        filepath = os.path.join(
+                            f"corpora/{st.session_state['user_id']}_{st.session_state['new_corpus_name']}/txt_files/",
+                            filename,
+                        )
+                        if os.path.isfile(filepath) and filename.endswith(".txt"):
+                            # Check if the file is not empty
+                            if os.path.getsize(filepath) > 0:
+                                valid_txts = True
+                if valid_txts:
+                    st.info("Corpus successfully processed!")
+                else:
+                    st.error(
+                        "No valid text files were created. Check the URLs or formats of your documents. If using URLs, the provider may block automatic downloading and you need to download the files yourself and upload them as a .zip file."
+                    )
 
                 # clear the progress bar
                 try:

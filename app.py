@@ -12,7 +12,7 @@ from helper.ui import (
     ui_metadata_upload,
     ui_tab,
 )
-from helper.user_management import check_password, set_user_id
+from helper.user_management import check_password, set_user_id, validate_corpora
 from helper.text_transformation import text_transformation_inputs
 from helper.search_terms import search_terms_inputs
 from helper.entities import gen_entities
@@ -33,6 +33,10 @@ set_user_id()
 
 ### initialization
 import_styles()
+
+
+### clear out partial corpora
+validate_corpora()
 
 
 ### sidebar
