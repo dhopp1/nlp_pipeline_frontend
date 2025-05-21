@@ -25,6 +25,19 @@ def initialize_processor():
         windows_tesseract_path=None,
         windows_poppler_path=None,
     )
+
+    # delete any csvs with "helper" in the csv output directory
+    if os.path.exists(
+        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/"
+    ):
+        for file_name in os.listdir(
+            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/"
+        ):
+            if "helper" in file_name:
+                os.remove(
+                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/{file_name}"
+                )
+
     try:
         processor.refresh_object_metadata()
     except:

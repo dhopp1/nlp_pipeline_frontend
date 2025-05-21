@@ -192,76 +192,79 @@ Use this section to search for terms within the corpus. For the `Execute search`
         )
 
         if st.session_state["run_search_button"]:
-            # intialize progress bar in case necessary
-            old_stdout = sys.stdout
-            sys.stdout = Logger(st.progress(0), st.empty())
+            if True:  # try:
+                # intialize progress bar in case necessary
+                old_stdout = sys.stdout
+                sys.stdout = Logger(st.progress(0), st.empty())
 
-            with st.spinner("Searching corpus..."):
-                with st.spinner("Loading corpus..."):
-                    processor = initialize_processor()
+                with st.spinner("Searching corpus..."):
+                    with st.spinner("Loading corpus..."):
+                        processor = initialize_processor()
 
-                # search terms
-                processor.gen_search_terms(
-                    group_name="all",
-                    text_ids=list(processor.metadata.text_id.values),
-                    search_terms_df=pd.read_excel(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/search_terms.xlsx",
-                        sheet_name="search_terms",
-                    ),
-                    path_prefix="transformed",
-                    character_buffer=st.session_state["character_buffer"],
-                    match_exclusion=st.session_state["exclude_occurrences"],
-                )
-
-                # search terms per document (for count per 1000, etc.)
-                processor.gen_aggregated_search_terms(
-                    group_names=list(processor.metadata.text_id.values),
-                    text_ids=[[x] for x in list(processor.metadata.text_id.values)],
-                    search_terms_df=pd.read_excel(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/search_terms.xlsx",
-                        sheet_name="search_terms",
-                    ),
-                    path_prefix="transformed",
-                    character_buffer=st.session_state["character_buffer"],
-                )
-
-                # co-occurring terms
-                processor.gen_co_occurring_terms(
-                    group_name="all",
-                    co_occurrence_terms_df=pd.read_excel(
-                        f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/search_terms.xlsx",
-                        sheet_name="search_terms",
-                    ),
-                    n_words=st.session_state["co_occurring_n_words"],
-                )
-
-                # second-level search terms
-                if (
-                    len(
-                        pd.read_excel(
-                            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/search_terms.xlsx",
-                            sheet_name="second_level_search_terms",
-                        )
-                    )
-                    > 0
-                ):
-                    processor.gen_second_level_search_terms(
+                    # search terms
+                    processor.gen_search_terms(
                         group_name="all",
-                        second_level_search_terms_df=pd.read_excel(
+                        text_ids=list(processor.metadata.text_id.values),
+                        search_terms_df=pd.read_excel(
                             f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/search_terms.xlsx",
-                            sheet_name="second_level_search_terms",
+                            sheet_name="search_terms",
                         ),
+                        path_prefix="transformed",
+                        character_buffer=st.session_state["character_buffer"],
+                        match_exclusion=st.session_state["exclude_occurrences"],
                     )
 
-                # delete existing excel of outputs
-                if os.path.exists(
-                    f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/search_terms_output.xlsx"
-                ):
-                    os.remove(
+                    # search terms per document (for count per 1000, etc.)
+                    processor.gen_aggregated_search_terms(
+                        group_names=list(processor.metadata.text_id.values),
+                        text_ids=[[x] for x in list(processor.metadata.text_id.values)],
+                        search_terms_df=pd.read_excel(
+                            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/search_terms.xlsx",
+                            sheet_name="search_terms",
+                        ),
+                        path_prefix="transformed",
+                        character_buffer=st.session_state["character_buffer"],
+                    )
+
+                    # co-occurring terms
+                    processor.gen_co_occurring_terms(
+                        group_name="all",
+                        co_occurrence_terms_df=pd.read_excel(
+                            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/search_terms.xlsx",
+                            sheet_name="search_terms",
+                        ),
+                        n_words=st.session_state["co_occurring_n_words"],
+                    )
+
+                    # second-level search terms
+                    if (
+                        len(
+                            pd.read_excel(
+                                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/search_terms.xlsx",
+                                sheet_name="second_level_search_terms",
+                            )
+                        )
+                        > 0
+                    ):
+                        processor.gen_second_level_search_terms(
+                            group_name="all",
+                            second_level_search_terms_df=pd.read_excel(
+                                f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/search_terms.xlsx",
+                                sheet_name="second_level_search_terms",
+                            ),
+                        )
+
+                    # delete existing excel of outputs
+                    if os.path.exists(
                         f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/search_terms_output.xlsx"
-                    )
+                    ):
+                        os.remove(
+                            f"corpora/{st.session_state['user_id']}_{st.session_state['selected_corpus']}/csv_outputs/search_terms_output.xlsx"
+                        )
 
-            st.info("Corpus searched successfully!")
+                st.info("Corpus searched successfully!")
+            else:  # except:
+                st.error("There was an error generating the search terms")
 
             # clear the progress bar
             try:
